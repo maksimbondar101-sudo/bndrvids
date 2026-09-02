@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /start
+Disallow: /thanks
+
+Sitemap: https://bndrvids.com/sitemap.xml

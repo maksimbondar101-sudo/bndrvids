@@ -1,0 +1,1132 @@
+/* ============================================================================
+   BNDRVIDS — Design System
+   ----------------------------------------------------------------------------
+   Rules this file does not break:
+     · Four colors + ONE accent. The accent belongs to the logo rule (nav and
+       footer), plus at most 3 uses in page content. Nowhere else.
+     · Two families: DM Serif Display for display only, DM Sans for all else.
+     · One ladder: 12 / 15 / 17 / 22 / 28–36 / 44–72. No off-ladder values.
+     · Line height and tracking are functions of size, not global constants.
+     · Three spacing gaps: 96 section / 48 block / 16 element. No exceptions.
+     · Zero border-radius, everywhere.
+     · Two buttons: solid, ghost. Same height, same padding.
+     · One motion gesture: fade + 12px rise, 500ms. Nothing else.
+   ========================================================================== */
+
+/* --- Fonts -----------------------------------------------------------------
+   DM Sans is self-hosted from the variable TTF: one 239KB file covering every
+   weight from Thin to Black plus an optical-size axis, instead of a request
+   per weight. DM Serif Display is its sibling — same Google/Colophon
+   commission, drawn to sit beside it — which is why the pairing reads as
+   deliberate rather than as two fonts that happened to be loaded.
+  ------------------------------------------------------------------------- */
+@font-face {
+  font-family: 'DM Sans';
+  src: url('../fonts/DMSans.ttf') format('truetype');
+  font-weight: 100 1000;                 /* the whole variable range */
+  font-style: normal;
+  font-display: swap;
+}
+
+/* --- Reset ---------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+* { margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+img, video, svg { display: block; max-width: 100%; }
+button, input, select, textarea { font: inherit; color: inherit; background: none; border: none; }
+/* fieldset ships with a border and a min-width that ignores flex/grid parents. */
+fieldset { border: 0; min-width: 0; }
+legend { padding: 0; }
+button { cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+ul, ol { list-style: none; }
+
+/* --- Tokens --------------------------------------------------------------- */
+:root {
+  /* Color: base, surface, text, muted + one accent. That is the whole palette. */
+  --base:        #0A0A0B;   /* not #000 — pure black flattens video */
+  --surface:     #131315;
+  --text:        #F2F2F0;   /* not #FFF — kills halation on dark */
+  --muted:       #8A8A87;
+  --accent:      #E3A857;
+  --line:        rgba(242, 242, 240, 0.10);
+  --line-strong: rgba(242, 242, 240, 0.22);
+  --wash:        rgba(242, 242, 240, 0.04);
+
+  /* Type — two families, zero overlap in role. The serif never sets a label,
+     the sans never sets a display line. */
+  --font-display: 'DM Serif Display', 'Iowan Old Style', Georgia, serif;
+  --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+
+  /* Ladder. Line height and tracking are functions of size, never constants —
+     see the paired --lh-* / --ls-* values below. */
+  --t-micro: 0.75rem;                            /* 12 — eyebrows, labels */
+  --t-sm:    0.9375rem;                          /* 15 — small, buttons */
+  --t-body:  1.0625rem;                          /* 17 — body */
+  --t-md:    1.375rem;                           /* 22 — h3, lede */
+  --t-lg:    clamp(1.75rem, 3vw, 2.25rem);       /* 28–36 — section headlines */
+  --t-xl:    clamp(2.75rem, 6.5vw, 4.5rem);      /* 44–72 — display, serif */
+
+  /* Tight at the top, loose in the middle. Nothing shares a value with a step
+     two rungs away. */
+  --lh-display: 1.0;
+  --lh-h2:      1.12;
+  --lh-h3:      1.35;
+  --lh-body:    1.65;
+  --lh-small:   1.55;
+
+  /* Negative for large, zero for body, positive for small caps. */
+  --ls-display: -0.02em;
+  --ls-h2:      -0.025em;
+  --ls-h3:      -0.015em;
+  --ls-lede:    -0.01em;
+  --ls-micro:    0.12em;
+
+  /* Space: the between-sections gap must dwarf every gap inside a section.
+     96, down from 120. Padding applies top AND bottom, so 120 put 240px of
+     nothing between one section's last line and the next section's first —
+     read back as a customer, the page kept losing its train of thought. 96
+     still doubles the 48 block gap, so the hierarchy the rule protects is
+     intact; the page is just no longer mostly air. */
+  --gap-section: 96px;
+  --gap-block:    48px;
+  --gap-element:  16px;
+
+  /* Grid */
+  --container: 1240px;
+  --gutter: 24px;
+  --margin: 32px;
+
+  /* Motion */
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur: 500ms;
+}
+
+@media (max-width: 900px) {
+  :root { --gap-section: 64px; --gap-block: 36px; --margin: 20px; }
+}
+
+/* --- Base ----------------------------------------------------------------- */
+body {
+  background: var(--base);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: var(--t-body);
+  line-height: var(--lh-body);
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4 { text-wrap: balance; }
+
+/* Display — DM Serif Display, and ONLY here. Never below 44px, never body.
+   It has a single weight (400) by design; asking for 500+ would synthesise a
+   fake bold, which is the fastest way to make a serif look counterfeit. */
+h1, .display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--t-xl);
+  line-height: var(--lh-display);
+  letter-spacing: var(--ls-display);
+}
+
+h2 { font-weight: 500; font-size: var(--t-lg); line-height: var(--lh-h2); letter-spacing: var(--ls-h2); }
+h3 { font-weight: 500; font-size: var(--t-md); line-height: var(--lh-h3); letter-spacing: var(--ls-h3); }
+h4 { font-weight: 500; font-size: var(--t-body); line-height: 1.4; letter-spacing: -0.01em; }
+/* Promoted from <h4> so the document outline has no skipped level; the type
+   is the h4 rung of the ladder either way. */
+.proof__h, .startaside__h { font-weight: 500; font-size: var(--t-body); line-height: 1.4; letter-spacing: -0.01em; }
+
+p { max-width: 68ch; }                        /* never let body run the full viewport */
+strong { font-weight: 500; color: var(--text); }
+
+::selection { background: var(--text); color: var(--base); }
+
+/* A default light scrollbar down the edge of a near-black page is a bright
+   strip on every screen — small, but visible 100% of the time. */
+html { color-scheme: dark; scrollbar-color: #2A2A2E var(--base); }
+::-webkit-scrollbar { width: 12px; height: 12px; }
+::-webkit-scrollbar-track { background: var(--base); }
+::-webkit-scrollbar-thumb { background: #2A2A2E; border: 3px solid var(--base); }
+::-webkit-scrollbar-thumb:hover { background: #3A3A40; }
+
+/* Skip link — off-screen until focused, then a real, styled control. */
+.skip {
+  position: fixed;
+  top: 12px; left: 12px;
+  z-index: 200;
+  padding: 12px 20px;
+  background: var(--text);
+  color: var(--base);
+  font-size: var(--t-sm);
+  font-weight: 500;
+  transform: translateY(-200%);
+  transition: transform 240ms var(--ease);
+}
+.skip:focus-visible { transform: none; outline-offset: 2px; }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
+/* --- Layout --------------------------------------------------------------- */
+.container {
+  width: 100%;
+  max-width: var(--container);
+  margin-inline: auto;
+  padding-inline: var(--margin);
+}
+
+.section { padding-block: var(--gap-section); }
+.section--tight { padding-block: calc(var(--gap-section) * 0.55); }
+.section--surface { background: var(--surface); }
+.section--hairline { border-top: 1px solid var(--line); }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: var(--gutter);
+}
+
+/* Editorial masthead: headline left, supporting line bottom-right. A single
+   660px column left the right 45% of every section dead, which is most of why
+   the page read as a stack of stranded blocks rather than a composition. */
+.section__head {
+  display: grid;
+  grid-template-columns: 7fr 5fr;
+  gap: var(--gap-element) var(--gap-block);
+  align-items: end;
+  /* One block gap. The 1.5x version put 72px between a two-line headline and
+     the content it introduces, which on the text-only sections left the
+     headline floating unattached to anything. */
+  margin-bottom: var(--gap-block);
+}
+.section__head .eyebrow { grid-column: 1 / -1; margin-bottom: 0; }
+.section__head h2 { max-width: 22ch; }
+.section__head p { color: var(--muted); margin-top: 0; padding-bottom: 4px; }
+@media (max-width: 860px) {
+  .section__head { grid-template-columns: 1fr; }
+  .section__head h2 { max-width: none; }
+}
+
+.eyebrow {
+  display: block;
+  font-size: var(--t-micro);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-micro);
+  line-height: 1.4;
+  font-weight: 500;
+  color: var(--muted);
+  margin-bottom: var(--gap-element);
+}
+.eyebrow::before {
+  content: '';
+  display: inline-block;
+  width: 20px;
+  height: 1px;
+  background: var(--line-strong);
+  vertical-align: middle;
+  margin-right: 10px;
+  transform: translateY(-1px);
+}
+
+.lede { font-size: var(--t-md); line-height: var(--lh-h3); letter-spacing: var(--ls-lede); color: var(--muted); }
+.muted { color: var(--muted); }
+.micro { font-size: var(--t-micro); line-height: var(--lh-small); letter-spacing: 0.06em; color: var(--muted); }
+.accent { color: var(--accent); }
+.stack > * + * { margin-top: var(--gap-element); }
+.stack-block > * + * { margin-top: var(--gap-block); }
+
+/* --- Buttons: exactly two ------------------------------------------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 48px;
+  padding-inline: 26px;
+  font-size: var(--t-sm);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  transition: background 300ms var(--ease), border-color 300ms var(--ease), color 300ms var(--ease);
+}
+.btn--solid { background: var(--text); color: var(--base); }
+.btn--solid:hover { background: #FFFFFF; }
+.btn--ghost { border-color: var(--line-strong); color: var(--text); }
+.btn--ghost:hover { border-color: var(--text); }
+.btn--lg { height: 56px; padding-inline: 32px; }
+
+.textlink {
+  font-size: var(--t-sm);
+  color: var(--muted);
+  border-bottom: 1px solid var(--line-strong);
+  padding-bottom: 3px;
+  transition: color 300ms var(--ease), border-color 300ms var(--ease);
+}
+.textlink:hover { color: var(--text); border-color: var(--text); }
+
+/* --- The input row: zero-friction CTA, the site's key interaction ---------- */
+.inputrow { display: flex; gap: 8px; max-width: 540px; }
+.inputrow input {
+  flex: 1;
+  min-width: 0;
+  height: 56px;
+  background: var(--wash);
+  border: 1px solid var(--line-strong);
+  padding-inline: 20px;
+  font-size: var(--t-sm);
+  color: var(--text);
+  transition: border-color 300ms var(--ease), background 300ms var(--ease);
+}
+.inputrow input::placeholder { color: var(--muted); }
+.inputrow input:focus {
+  outline: none;
+  border-color: var(--text);
+  background: rgba(242, 242, 240, 0.07);
+}
+@media (max-width: 560px) {
+  .inputrow { flex-direction: column; }
+  .inputrow .btn { width: 100%; }
+}
+
+/* --- Nav ------------------------------------------------------------------ */
+.nav {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 72px;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid transparent;
+  transition: background 400ms var(--ease), border-color 400ms var(--ease);
+}
+.nav.is-scrolled {
+  background: rgba(10, 10, 11, 0.86);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border-bottom-color: var(--line);
+}
+/* Promote the fixed header to its own compositing layer. A backdrop-filter on
+   a fixed element forces the browser to re-blur the page behind it every frame
+   of every scroll — the single most common cause of a site that scrolls like
+   it's stuttering. Higher opacity + smaller radius costs far less per frame. */
+.nav { will-change: background-color; transform: translateZ(0); }
+.nav__inner { display: flex; align-items: center; justify-content: space-between; gap: var(--gap-block); width: 100%; }
+/* The wordmark, reproduced natively rather than as an image: it stays crisp at
+   any DPI, costs no request, and inherits colour. The Canva PNG is the
+   canonical artwork for off-site use — invoices, email, social. Same letter-
+   spacing (0.16em) and the same single amber rule, so they are one mark. */
+.nav__logo {
+  position: relative;
+  font-size: var(--t-sm);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+.nav__logo::after,
+.footer__brand::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0.16em;          /* discount the trailing letter-space */
+  bottom: -5px;
+  height: 1px;
+  background: var(--accent);
+}
+.nav__links { display: flex; align-items: center; gap: 32px; }
+.nav__links a {
+  font-size: var(--t-sm);
+  color: var(--muted);
+  transition: color 300ms var(--ease);
+}
+.nav__links a:hover, .nav__links a[aria-current="page"] { color: var(--text); }
+.nav__right { display: flex; align-items: center; gap: 32px; }
+.nav__toggle { display: none; font-size: var(--t-sm); color: var(--muted); }
+/* The mobile menu's copy of the primary action. Hidden until there is a menu
+   to put it in — see the note in the breakpoint below. */
+.nav__cta { display: none; }
+
+@media (max-width: 860px) {
+  /* Full height, not a drop-down flap. Anchored `auto` at the bottom, the panel
+     ended wherever the links ended: page content sat visibly beneath it on the
+     same background, and because the panel is fixed, scrolling slid that content
+     around underneath a menu that stayed put. Covering the viewport removes both
+     problems and leaves nothing behind the menu to mis-tap. */
+  .nav__links {
+    position: fixed;
+    /* Height, not `bottom: 0`. `.nav` carries transform: translateZ(0) for
+       compositing, and a transformed ancestor becomes the containing block for
+       its position:fixed descendants — so `bottom: 0` resolved against the 72px
+       header and collapsed this panel to 53px. Sizing it in viewport units
+       keeps it independent of that. */
+    top: 72px; left: 0; right: 0;
+    height: calc(100vh - 72px);
+    height: calc(100svh - 72px);
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    background: var(--base);
+    border-top: 1px solid var(--line);
+    padding: 8px var(--margin) calc(var(--margin) + 24px);
+    display: none;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .nav.is-open .nav__links { display: flex; }
+  .nav__links a { padding-block: 16px; font-size: var(--t-body); }
+  /* 39x25 was the primary navigation control on every phone. */
+  .nav__toggle { display: inline-flex; align-items: center; min-height: 44px; padding-inline: 4px; }
+  .nav__right .btn { display: none; }
+
+  /* "Schedule a call" is the whole point of the site, and the breakpoint above
+     hides the header button. Without this it was absent from mobile entirely —
+     no path to the booking form from the menu at all. Pinned to the bottom of
+     the panel so it reads as the action, not the sixth nav item. */
+  .nav__links .nav__cta {
+    display: inline-flex;
+    align-self: flex-start;
+    margin-top: auto;
+    padding-block: 0;
+    padding-inline: 26px;
+    font-size: var(--t-sm);
+    color: var(--base);
+  }
+  .nav__links .nav__cta::after { display: none; }   /* buttons don't draw the link rule */
+}
+
+/* --- Hero ----------------------------------------------------------------- */
+/* Centred, not bottom-anchored, and short of a full viewport. Bottom-anchoring
+   over full-bleed video is the premium pattern, but it only works when there IS
+   video — otherwise the top two-thirds is a hole with text fallen to the floor.
+   Centred reads as deliberate breathing room either way. */
+.hero {
+  position: relative;
+  min-height: 86svh;
+  display: flex;
+  align-items: center;
+  padding-block: 140px 120px;
+  overflow: hidden;
+}
+/* Specificity matters here: .hero__bg also carries .media, and `.media
+   { position: relative }` is declared later in this file. At equal specificity
+   the later rule wins, which turned this into a relatively-positioned box with
+   no height — collapsing the hero video to 0x0 so neither the poster nor the
+   loop could ever paint. Two classes beats one; don't reduce it back. */
+.hero .hero__bg { position: absolute; inset: 0; z-index: 0; }
+.hero__bg video { width: 100%; height: 100%; object-fit: cover; }
+/* Lighter than it was. The old scrim crushed the upper two-thirds of the hero
+   to solid black, so with no video loaded the first screen read as a void with
+   text stranded at the bottom. This keeps text contrast while letting the frame
+   behind it stay visible. */
+.hero__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(to top, var(--base) 0%, rgba(10,10,11,0.86) 22%, rgba(10,10,11,0.45) 55%, rgba(10,10,11,0.25) 100%);
+}
+.hero__inner { position: relative; z-index: 2; width: 100%; }
+.hero h1 { max-width: 16ch; }
+.hero__sub { margin-top: var(--gap-element); max-width: 46ch; color: var(--muted); }
+.hero__cta { margin-top: var(--gap-block); }
+.hero__micro { margin-top: var(--gap-element); }
+
+/* Page hero for interior pages — no video, same rhythm */
+.pagehead { padding-top: 200px; padding-bottom: var(--gap-section); }
+.pagehead h1 { max-width: 18ch; }
+.pagehead .lede { margin-top: var(--gap-block); max-width: 56ch; }
+
+/* --- Media: graded placeholder that never looks broken -------------------- */
+.media {
+  position: relative;
+  background: linear-gradient(148deg, #1B1B1F 0%, #0F0F11 46%, #191A1D 100%);
+  overflow: hidden;
+}
+.media::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.055'/%3E%3C/svg%3E");
+}
+.media[data-label]::after {
+  content: attr(data-label);
+  position: absolute;
+  left: 16px;
+  bottom: 14px;
+  z-index: 3;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(242, 242, 240, 0.30);
+  transition: opacity 400ms var(--ease);
+}
+.media.is-loaded::after { opacity: 0; }
+.media video, .media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
+.media--16x9 { aspect-ratio: 16 / 9; }
+.media--9x16 { aspect-ratio: 9 / 16; }
+.media--4x3  { aspect-ratio: 4 / 3; }
+.media--1x1  { aspect-ratio: 1 / 1; }
+/* Portrait. The founder photo is 1320x2049 (~0.64); in the landscape 4:3 frame
+   object-fit: cover would have cut off either the top of the head or most of
+   the suit. 2:3 crops roughly 3% off the sides and nothing off the top. */
+.media--2x3  { aspect-ratio: 2 / 3; }
+
+/* --- Proof bar ------------------------------------------------------------ */
+.proof { border-block: 1px solid var(--line); }
+.proof__grid { display: grid; grid-template-columns: repeat(3, 1fr); }
+.proof__item { padding: 40px 0 40px 32px; border-left: 1px solid var(--line); }
+.proof__item:first-child { padding-left: 0; border-left: none; }
+.proof__h { margin-bottom: 6px; }
+.proof__item p { font-size: var(--t-sm); color: var(--muted); max-width: 34ch; }
+@media (max-width: 860px) {
+  .proof__grid { grid-template-columns: 1fr; }
+  .proof__item { padding: 28px 0; border-left: none; border-top: 1px solid var(--line); }
+  .proof__item:first-child { border-top: none; }
+}
+
+/* --- Photos in / walkthrough out: the most important block on the site ----- */
+/* Photos small and flat on the left, video large on the right — the size
+   difference IS the argument. A 2-col photo grid made the left column taller
+   than the video and left the payoff stranded in dead space; 3 columns makes
+   the strip short and wide so both sides sit on the same optical line. */
+.swap { display: grid; grid-template-columns: 0.95fr auto 1.25fr; gap: var(--gap-block); align-items: center; }
+.swap__photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.swap__photos .media { filter: saturate(0.55) brightness(0.78); }
+.swap__mid { text-align: center; }
+.swap__rule { width: 1px; height: 56px; background: var(--line-strong); margin: 0 auto var(--gap-element); }
+.swap__mid .micro { display: block; white-space: nowrap; }
+@media (max-width: 1000px) {
+  .swap { grid-template-columns: 1fr; }
+  .swap__rule { width: 56px; height: 1px; margin-bottom: 12px; }
+  .swap__mid { padding-block: 8px; }
+}
+
+/* --- Absence block: the moat, rendered as a section -------------------------
+   ONE continuous rule above the row, not one per column. Three short borders
+   separated by gutters is the definition of a chopped-up page.
+  ------------------------------------------------------------------------- */
+.absence {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--gutter);
+  border-top: 1px solid var(--line-strong);
+  padding-top: var(--gap-block);
+}
+/* No strike. A 2px rule through a 32px headline made the three main benefits
+   genuinely effortful to read — and the words already begin with "No", so the
+   line was saying it a second time at the cost of legibility. */
+.absence__item h3 {
+  font-size: var(--t-lg);            /* text-only sections need weight */
+  line-height: var(--lh-h2);
+  letter-spacing: var(--ls-h2);
+  margin-bottom: var(--gap-element);
+}
+.absence__item p { font-size: var(--t-sm); color: var(--muted); }
+@media (max-width: 860px) { .absence { grid-template-columns: 1fr; gap: var(--gap-block); } }
+
+/* Four across. At ~276px a column, the 32px heading wraps to three ragged
+   lines, so this variant steps the heading down a rung. */
+.absence--4 { grid-template-columns: repeat(4, 1fr); }
+.absence--4 .absence__item h3 {
+  font-size: var(--t-md);
+  line-height: var(--lh-h3);
+  letter-spacing: var(--ls-h3);
+}
+@media (max-width: 1000px) and (min-width: 861px) {
+  .absence--4 { grid-template-columns: repeat(2, 1fr); row-gap: var(--gap-block); }
+}
+@media (max-width: 860px) { .absence--4 { grid-template-columns: 1fr; } }
+
+/* --- The math block ------------------------------------------------------- */
+.math { display: grid; grid-template-columns: 5fr 7fr; gap: var(--gap-block); align-items: center; }
+.math__body { max-width: 40ch; }
+.math__body p + p { margin-top: var(--gap-element); }
+/* width:100% is load-bearing. margin-left:auto on a grid item cancels
+   justify-self:stretch, so the item shrink-to-fits — and an empty aspect-ratio
+   box has no intrinsic width, so it collapsed to 0x0 and vanished. */
+.math__viz { width: 100%; max-width: 320px; justify-self: end; }
+/* Founder block reverses the order — image first, text second — so the photo
+   aligns to the container edge instead of being pushed toward the text the way
+   a right-hand viz is. Slightly wider too: it's a face, not a clip. */
+.math--founder .math__viz { justify-self: start; max-width: 360px; }
+@media (max-width: 900px) {
+  /* Stacked, a 320px-wide portrait is 480px tall before a word of the bio —
+     half a phone screen spent on a headshot. 200 still reads as a person. */
+  .math--founder .math__viz { max-width: 200px; }
+}
+@media (max-width: 900px) {
+  .math { grid-template-columns: 1fr; }
+  .math__viz { max-width: 240px; justify-self: start; }
+}
+
+/* --- Pricing tiers -------------------------------------------------------- */
+/* Two tiers, not three — capped so the cards don't stretch to half a 1360px
+   container each and stop reading as cards. */
+.tiers {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--gutter);
+  align-items: stretch;
+  max-width: 900px;
+  margin-inline: auto;                   /* centred, not left-anchored */
+  /* Room for the "Recommended" label to sit above a card without pushing that
+     card down — the two card tops stay level. */
+  padding-top: 30px;
+}
+
+/* Pricing is the one section that centres. Centred cards under a left-aligned
+   masthead reads as a mistake, so the header centres with them. */
+.section--centered .section__head {
+  grid-template-columns: 1fr;
+  justify-items: center;
+  text-align: center;
+  max-width: 720px;
+  margin-inline: auto;
+}
+.section--centered .section__head h2 { max-width: 24ch; }
+.section--centered .section__head p { padding-bottom: 0; }
+.section--centered .textlink-wrap { text-align: center; }
+/* Both tiers carry an identical treatment — same surface, same border, same
+   amber rule, same button. There is no "featured" variant: singling one out
+   made the pair read as an upsell rather than as a choice between two things.
+   The two rules are one component gesture, not two separate accent uses. */
+.tier {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+}
+.tier::before {
+  content: '';
+  position: absolute;
+  inset: -1px -1px auto -1px;
+  height: 2px;
+  background: var(--accent);
+}
+/* Sits above the card, outside it — so the recommendation is a note about the
+   card rather than a change to it, and both cards keep an identical treatment.
+   Real markup, not content: attr(), so screen readers actually announce it. */
+.tier__flag {
+  position: absolute;
+  /* -1px, not 0: absolute offsets resolve against the padding box, so `0`
+     sits inside the card's 1px border and misses the amber rule's left end. */
+  left: -1px;
+  bottom: calc(100% + 12px);
+  font-size: var(--t-micro);
+  line-height: 1.4;
+  text-transform: uppercase;
+  letter-spacing: var(--ls-micro);
+  font-weight: 500;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.tier__name { font-size: var(--t-micro); text-transform: uppercase; letter-spacing: var(--ls-micro); color: var(--muted); }
+.tier__price { font-size: var(--t-lg); line-height: var(--lh-h2); letter-spacing: var(--ls-h2); margin-top: 20px; font-variant-numeric: tabular-nums; }
+.tier__price span { font-size: var(--t-sm); color: var(--muted); letter-spacing: 0; }
+.tier__for { font-size: var(--t-sm); color: var(--muted); margin-top: 12px; padding-bottom: 28px; border-bottom: 1px solid var(--line); }
+/* Summary variant (homepage): no bullet list, so the description carries the
+   height and the button sits directly under it rather than after a 48px void
+   where a list used to be. */
+.tiers--summary .tier__for { border-bottom: none; padding-bottom: 0; flex: 1; }
+.tiers--summary .tier .btn { margin-top: 28px; }
+
+.tier__list { margin-top: 28px; margin-bottom: var(--gap-block); flex: 1; }
+.tier__list li { font-size: var(--t-sm); padding-left: 20px; position: relative; }
+.tier__list li + li { margin-top: 12px; }
+.tier__list li::before { content: '—'; position: absolute; left: 0; color: var(--muted); }
+@media (max-width: 900px) {
+  /* Stacked, the label drops into the gap between cards — a 24px gutter isn't
+     enough for it to clear the card above. */
+  .tiers { grid-template-columns: 1fr; row-gap: var(--gap-block); }
+}
+
+/* --- Steps ---------------------------------------------------------------- */
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--gutter);
+  border-top: 1px solid var(--line-strong);
+  padding-top: var(--gap-block);
+}
+.step__num { font-size: var(--t-micro); letter-spacing: 0.14em; color: var(--muted); font-variant-numeric: tabular-nums; }
+.step h3 { margin-top: var(--gap-element); }
+.step p { font-size: var(--t-sm); color: var(--muted); margin-top: 12px; }
+@media (max-width: 860px) { .steps { grid-template-columns: 1fr; gap: var(--gap-block); } }
+
+/* Four across once the payment step joins the sequence. */
+.steps--4 { grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 1000px) and (min-width: 861px) {
+  .steps--4 { grid-template-columns: repeat(2, 1fr); row-gap: var(--gap-block); }
+}
+@media (max-width: 860px) { .steps--4 { grid-template-columns: 1fr; } }
+
+/* --- Sample offer band ---------------------------------------------------- */
+.band { background: var(--surface); border-block: 1px solid var(--line); }
+/* Headline left across both rows, supporting line and CTA stacked right —
+   so the open right side is closed by content instead of trailing off. */
+.band__inner {
+  display: grid;
+  grid-template-columns: 6fr 5fr;
+  gap: var(--gap-block) calc(var(--gap-block) * 1.5);
+  align-items: end;
+}
+/* max-width in ch, so the cap tracks the font size rather than the viewport.
+   Without it a long headline at 72px stacks to seven lines in this column and
+   the CTA beside it gets pushed off the screen. */
+.band .display { grid-column: 1; grid-row: 1 / span 2; align-self: start; max-width: 14ch; }
+.band__sub { grid-column: 2; grid-row: 1; margin-top: 0; color: var(--muted); }
+.band__cta { grid-column: 2; grid-row: 2; margin-top: 0; }
+@media (max-width: 900px) {
+  .band__inner { grid-template-columns: 1fr; }
+  .band .display, .band__sub, .band__cta { grid-column: 1; grid-row: auto; }
+}
+
+/* --- Split sections: narrow sticky heading, wide content ------------------ */
+.section--split > .container {
+  display: grid;
+  grid-template-columns: 4fr 8fr;
+  gap: calc(var(--gap-block) * 1.5);
+  align-items: start;
+}
+.section--split .section__head {
+  grid-template-columns: 1fr;
+  margin-bottom: 0;
+  position: sticky;
+  top: 120px;
+}
+.section--split .section__head h2 { max-width: 14ch; }
+/* The sticky heading is two lines tall next to ~900px of questions, so the
+   left third was empty for almost the whole scroll. One useful line closes it
+   without adding a section. */
+.faq__aside {
+  margin-top: var(--gap-block);
+  font-size: var(--t-sm);
+  color: var(--muted);
+  max-width: 26ch;
+}
+.faq__aside a { display: inline-block; margin-top: 10px; }
+@media (max-width: 900px) {
+  .section--split > .container { grid-template-columns: 1fr; gap: var(--gap-block); }
+  .section--split .section__head { position: static; }
+  /* Stacked, this would sit between the heading and the questions — exactly
+     where it interrupts. It belongs beside them or not at all. */
+  .faq__aside { display: none; }
+}
+
+/* --- Quote ---------------------------------------------------------------- */
+.quote { max-width: 900px; }
+.quote blockquote { font-family: var(--font-display); font-weight: 400; font-size: var(--t-xl); line-height: var(--lh-display); letter-spacing: var(--ls-display); text-wrap: balance; }
+.quote figcaption { margin-top: var(--gap-block); font-size: var(--t-sm); color: var(--muted); }
+.quote figcaption strong { display: block; color: var(--text); font-weight: 500; }
+
+/* --- FAQ ------------------------------------------------------------------ */
+.faq { border-top: 1px solid var(--line); }
+.faq details { border-bottom: 1px solid var(--line); }
+.faq summary {
+  list-style: none;
+  cursor: pointer;
+  padding-block: 32px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--gap-block);
+  font-size: var(--t-md);
+  letter-spacing: var(--ls-h3);
+  line-height: var(--lh-h3);
+  transition: color 300ms var(--ease);
+}
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary:hover { color: var(--muted); }
+.faq summary::after {
+  content: '+';
+  flex: none;
+  font-size: var(--t-md);
+  color: var(--muted);
+  transition: transform 300ms var(--ease);
+}
+.faq details[open] summary::after { transform: rotate(45deg); }
+.faq__a { padding-bottom: 32px; }
+.faq__a p { font-size: var(--t-sm); color: var(--muted); }
+.faq__a p + p { margin-top: 12px; }
+
+/* --- Final CTA: the one centered element on the entire site ---------------- */
+.finale { text-align: center; }
+.finale .display { max-width: 18ch; margin-inline: auto; }
+.finale .inputrow { margin-inline: auto; margin-top: var(--gap-block); }
+.finale .micro { margin-top: var(--gap-element); }
+
+/* --- Footer --------------------------------------------------------------- */
+.footer { border-top: 1px solid var(--line); padding-block: var(--gap-block) 40px; }
+.footer__grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: var(--gutter); padding-bottom: var(--gap-block); }
+.footer__brand { position: relative; display: inline-block; font-size: var(--t-sm); font-weight: 700; letter-spacing: 0.16em; }
+.footer__brand + p { font-size: var(--t-sm); color: var(--muted); margin-top: var(--gap-element); max-width: 30ch; }
+.footer__h { font-size: var(--t-micro); text-transform: uppercase; letter-spacing: var(--ls-micro); color: var(--muted); font-weight: 500; margin-bottom: var(--gap-element); }
+.footer li + li { margin-top: 10px; }
+.footer li a { font-size: var(--t-sm); color: var(--muted); transition: color 300ms var(--ease); }
+.footer li a:hover { color: var(--text); }
+.footer__base { display: flex; justify-content: space-between; gap: var(--gutter); padding-top: 28px; border-top: 1px solid var(--line); flex-wrap: wrap; }
+@media (max-width: 860px) {
+  .footer__grid { grid-template-columns: 1fr 1fr; row-gap: var(--gap-block); }
+  .footer__brand-col { grid-column: 1 / -1; }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --- Forms ---------------------------------------------------------------- */
+.startgrid { display: grid; grid-template-columns: 7fr 4fr; gap: var(--gap-section) var(--gap-block); align-items: start; }
+@media (max-width: 900px) { .startgrid { grid-template-columns: 1fr; gap: var(--gap-block); } }
+
+.form > * + * { margin-top: 28px; }
+.form__pair { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gutter); }
+@media (max-width: 560px) { .form__pair { grid-template-columns: 1fr; gap: 28px; } }
+
+.field { display: flex; flex-direction: column; }
+.field label {
+  font-size: var(--t-micro);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-micro);
+  color: var(--muted);
+  margin-bottom: 10px;
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+/* --muted, not a fainter alpha. At 0.28 this measured 2.27:1 against the page —
+   the one marker telling someone a field is mandatory was the least legible
+   text on the site. Hierarchy comes from size (10 vs 12), not from fading it
+   below the point of being readable. */
+.field .req { letter-spacing: 0.06em; color: var(--muted); text-transform: none; font-size: 10px; }
+.field input, .field select, .field textarea {
+  width: 100%;
+  min-height: 52px;
+  background: var(--wash);
+  border: 1px solid var(--line-strong);
+  padding: 14px 18px;
+  font-size: var(--t-sm);
+  color: var(--text);
+  transition: border-color 300ms var(--ease), background 300ms var(--ease);
+}
+.field textarea { min-height: 96px; resize: vertical; line-height: 1.5; }
+/* appearance:none strips the native chevron, which leaves a select looking
+   exactly like a text input. Put one back. */
+.field select {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  padding-right: 44px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%238A8A87' stroke-width='1.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 18px center;
+}
+.field select option { background: var(--surface); color: var(--text); }
+.field input::placeholder, .field textarea::placeholder { color: var(--muted); }
+/* background-COLOR, not the `background` shorthand: the shorthand resets
+   background-image, which erased the select's chevron the moment it was
+   focused — the one state where you most need to see it's a dropdown. */
+.field input:focus, .field select:focus, .field textarea:focus {
+  outline: none;
+  border-color: var(--text);
+  background-color: rgba(242, 242, 240, 0.07);
+}
+
+.field .hint { font-size: var(--t-micro); color: var(--muted); margin-top: 10px; }
+
+/* fieldset/legend so the group is announced as one question, styled to match
+   the ordinary field labels exactly — same size, tracking and colour. */
+.field legend {
+  font-size: var(--t-micro);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-micro);
+  color: var(--muted);
+  margin-bottom: 10px;
+  padding: 0;
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+
+/* --- Chips: multi-select without a dropdown's click-open-scan-click ------- */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+/* 6px read as one continuous field of twelve chips — two different questions
+   (which days, which times) rendered as a single grid. The sub-label plus real
+   separation makes them two. */
+.chips + .chips { margin-top: 6px; }
+.chips__label {
+  display: block;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: var(--ls-micro);
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+/* Reads as a qualifier on the label, not a second label. */
+.chips__zone {
+  color: var(--accent);
+  letter-spacing: 0.06em;
+  text-transform: none;
+  margin-left: 8px;
+}
+.chips__label + .chips { margin-top: 0; }
+.chipgroup + .chipgroup { margin-top: 20px; }
+.chip { display: block; }
+.chip input {
+  position: absolute;
+  width: 1px; height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.chip span {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 62px;
+  min-height: 46px;                      /* comfortable touch target */
+  padding: 8px 14px;
+  border: 1px solid var(--line-strong);
+  font-size: var(--t-sm);
+  line-height: 1.15;
+  color: var(--muted);
+  cursor: pointer;
+  user-select: none;
+  transition: background 200ms var(--ease), border-color 200ms var(--ease), color 200ms var(--ease);
+}
+/* The label sits in its own element so a strike can be drawn through the word
+   itself. Set on the flex container it lands in the gap between the two lines. */
+.chip span i { font-style: normal; }
+.chip span em {
+  font-style: normal;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  opacity: 0.65;
+  margin-top: 3px;
+}
+.chip:hover span { border-color: var(--text); color: var(--text); }
+.chip input:checked + span {
+  background: var(--text);
+  border-color: var(--text);
+  color: var(--base);
+}
+.chip input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.chips.is-invalid .chip span { border-color: var(--accent); }
+
+/* Ruled out, not just dimmed — a slot that is merely faint reads as "low
+   priority" and people still click it. The strike says it is not on offer.
+   Declared after :hover so a disabled chip never lights up under the cursor. */
+.chip input:disabled + span,
+.chip input:disabled + span:hover {
+  position: relative;
+  border-color: var(--line);
+  color: rgba(242, 242, 240, 0.30);
+  background: none;
+  cursor: not-allowed;
+}
+/* Struck on the label and the hours themselves, not on the flex container —
+   a line-through set on the container falls in the gap between the two lines
+   instead of crossing either word. */
+.chip input:disabled + span i,
+.chip input:disabled + span em {
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+  text-decoration-color: rgba(242, 242, 240, 0.55);
+}
+.chip input:disabled + span em { opacity: 0.45; }
+.hint[data-weekend-note] { color: var(--accent); }
+.formnote {
+  margin-top: var(--gap-element);
+  padding: 14px 18px;
+  border-left: 2px solid var(--accent);
+  background: var(--wash);
+  font-size: var(--t-sm);
+  color: var(--text);
+}
+
+
+/* --- Requirements table ----------------------------------------------------
+   The wide column carries the table; the vertical clip takes the narrow one.
+   The reverse of .math, where the text column is the smaller of the two.
+  ------------------------------------------------------------------------- */
+.needs {
+  display: grid;
+  grid-template-columns: 7fr 4fr;
+  gap: calc(var(--gap-block) * 1.5);
+  align-items: start;
+}
+.needs__main > .reveal + .speclist { margin-top: calc(var(--gap-block) * 1.5); }
+.needs__viz { width: 100%; max-width: 300px; justify-self: end; }
+@media (max-width: 900px) {
+  .needs { grid-template-columns: 1fr; gap: var(--gap-block); }
+  .needs__viz { max-width: 240px; justify-self: start; }
+}
+
+/* Label / value rows on hairlines — the same register as the eyebrows, so it
+   reads as part of the system rather than as a bolted-on data table. */
+.speclist { border-top: 1px solid var(--line-strong); }
+.speclist > div {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  gap: var(--gutter);
+  padding-block: 20px;
+  border-bottom: 1px solid var(--line);
+}
+.speclist dt {
+  font-size: var(--t-micro);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-micro);
+  color: var(--muted);
+  padding-top: 4px;
+}
+.speclist dd { font-size: var(--t-sm); color: var(--muted); max-width: 56ch; }
+.speclist dd strong { color: var(--text); }
+@media (max-width: 620px) {
+  .speclist > div { grid-template-columns: 1fr; gap: 8px; }
+  .speclist dt { padding-top: 0; }
+}
+
+/* --- Pledge: the one claim the whole site rests on -------------------------
+   Centred and set in the display serif, because this is a promise rather than
+   a description. The narrow measure is the point — it forces the eye down the
+   middle instead of sweeping a full-width paragraph.
+  ------------------------------------------------------------------------- */
+.pledge__inner { max-width: 760px; margin-inline: auto; text-align: center; }
+/* The eyebrow's leading hairline needs an inline box to centre against. */
+.pledge .eyebrow { display: inline-block; }
+.pledge .display { margin-top: var(--gap-element); }
+
+/* One short amber rule, echoing the mark. Separates the promise from the
+   reasoning without a full-width border cutting the section in half. */
+.pledge__rule {
+  width: 48px;
+  height: 2px;
+  background: var(--accent);
+  margin: var(--gap-block) auto 0;
+}
+
+.pledge__body { margin-top: var(--gap-block); }
+.pledge__body p {
+  max-width: 60ch;
+  margin-inline: auto;
+  color: var(--muted);
+}
+.pledge__body p + p { margin-top: var(--gap-element); }
+
+/* --- Contact -------------------------------------------------------------- */
+.contact__mail {
+  display: inline-block;
+  font-size: var(--t-lg);
+  line-height: var(--lh-h2);
+  letter-spacing: var(--ls-h2);
+  border-bottom: 1px solid var(--line-strong);
+  padding-bottom: 6px;
+  transition: border-color 300ms var(--ease), color 300ms var(--ease);
+}
+.contact__mail:hover { border-color: var(--accent); color: var(--accent); }
+.contact__note { color: var(--muted); margin-top: var(--gap-block); max-width: 46ch; }
+.contact__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: var(--gap-block); }
+
+.startaside { border-top: 1px solid var(--line-strong); padding-top: var(--gap-element); }
+.startaside__h { margin-bottom: 28px; }
+.startaside__steps li { font-size: var(--t-sm); color: var(--muted); padding-left: 34px; position: relative; }
+.startaside__steps li + li { margin-top: var(--gap-element); }
+.startaside__steps li span {
+  position: absolute;
+  left: 0;
+  font-size: var(--t-micro);
+  letter-spacing: 0.14em;
+  color: var(--muted);            /* was 0.30 alpha — 2.45:1, under AA */
+  font-variant-numeric: tabular-nums;
+}
+.startaside__note { margin-top: var(--gap-block); padding-top: 28px; border-top: 1px solid var(--line); }
+
+/* --- Bare pages: thanks, 404 ---------------------------------------------- */
+.stage { min-height: 76svh; display: flex; align-items: center; padding-block: var(--gap-section); }
+.stage__inner { max-width: 660px; }
+.stage h1 { margin-top: 0; }
+.stage .lede { margin-top: var(--gap-element); }
+
+/* --- Interactions: three, and no more --------------------------------------
+   All transform/opacity only — compositor work, never layout. Each one either
+   confirms an action or clarifies structure. Nothing here plays on its own.
+  ------------------------------------------------------------------------- */
+
+/* 1 · Underline draws in from the left on hover, focus, and current page. */
+.nav__links a, .footer li a { position: relative; }
+.nav__links a::after, .footer li a::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: -5px;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 320ms var(--ease);
+}
+.nav__links a:hover::after,
+.nav__links a:focus-visible::after,
+.nav__links a[aria-current="page"]::after,
+.footer li a:hover::after,
+.footer li a:focus-visible::after { transform: scaleX(1); }
+
+/* 2 · Poster drifts inside a frame that stays put — depth, not growth.
+   Retargeted from the deleted work grid onto the playable video frames, which
+   are now the only tiles that respond to a cursor. Same gesture, live target. */
+.media[data-hover] > video,
+.media[data-hover] > img { transition: transform 600ms var(--ease); }
+.media[data-hover]:hover > video,
+.media[data-hover]:hover > img { transform: scale(1.04); }
+.media[data-hover]::before { transition: opacity 500ms var(--ease); }
+.media[data-hover]:hover::before { opacity: 0.7; }
+
+/* 3 · The eyebrow rule draws itself as its section arrives. Once. */
+.js .reveal .eyebrow::before,
+.js .eyebrow.reveal::before {
+  transform: translateY(-1px) scaleX(0);
+  transform-origin: left;
+  transition: transform var(--dur) var(--ease) 120ms;
+}
+.js .reveal.is-in .eyebrow::before,
+.js .eyebrow.reveal.is-in::before { transform: translateY(-1px) scaleX(1); }
+
+/* --- Motion: one gesture, one duration, one curve --------------------------
+   Scoped to .js, which an inline script in <head> adds. Content is visible by
+   default; only a page that is definitely running JS ever hides it. If the
+   script fails, 404s, or is blocked, the site renders in full — it just doesn't
+   animate. A reveal effect must never be able to blank the page.
+  ------------------------------------------------------------------------- */
+.js .reveal {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
+  transition-delay: calc(var(--i, 0) * 60ms);
+}
+.js .reveal.is-in { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  .js .reveal { opacity: 1; transform: none; }
+  /* The eyebrow rule and tile drift are decorative — land them, don't play them. */
+  .js .reveal .eyebrow::before,
+  .js .eyebrow.reveal::before { transform: translateY(-1px) scaleX(1); }
+  .media[data-hover]:hover > video,
+  .media[data-hover]:hover > img { transform: none; }
+  html { scroll-behavior: auto; }
+}

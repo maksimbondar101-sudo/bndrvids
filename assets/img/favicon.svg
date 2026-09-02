@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <title>BNDRVIDS</title>
+  <!-- Own background, so it reads on light and dark browser chrome alike. -->
+  <rect width="32" height="32" fill="#0A0A0B"/>
+  <!-- The B is drawn as paths, not <text>: a favicon cannot depend on a font
+       being installed, and Instrument Serif/Inter Tight will not be. -->
+  <path fill="#F2F2F0" fill-rule="evenodd" d="
+    M7.6 4.5 H18.6 C22.2 4.5 24.4 6.8 24.4 9.9 C24.4 12.1 23.3 13.8 21.5 14.7
+    C23.8 15.5 25.2 17.5 25.2 20.1 C25.2 23.6 22.7 26 19 26 H7.6 Z
+    M11.7 8.2 V12.9 H18.1 C19.6 12.9 20.4 12 20.4 10.6 C20.4 9.2 19.6 8.2 18.1 8.2 Z
+    M11.7 16.6 V22.3 H18.7 C20.4 22.3 21.2 21.2 21.2 19.5 C21.2 17.7 20.4 16.6 18.7 16.6 Z
+  "/>
+  <!-- The one amber rule, same gesture as the wordmark. -->
+  <rect x="7.6" y="28" width="17.6" height="2" fill="#E3A857"/>
+</svg>

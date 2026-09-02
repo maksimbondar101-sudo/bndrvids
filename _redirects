@@ -1,0 +1,9 @@
+# Mirrors the [[redirects]] blocks in netlify.toml — see the note in _headers
+# for why both files exist.
+#
+# Internal files that live in the repo but have no business being served. The
+# trailing ! forces the rule to win over the static file actually sitting there.
+
+/README.md                /404.html  404!
+/serve.ps1                /404.html  404!
+/assets/fonts/README.txt  /404.html  404!

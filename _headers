@@ -1,0 +1,18 @@
+# Mirrors the [[headers]] blocks in netlify.toml.
+#
+# Both exist on purpose. netlify.toml is authoritative for Git-based builds and
+# is the file to edit; this one covers manual and drag-and-drop deploys, where
+# _headers is guaranteed to be read. Where both apply, netlify.toml wins and the
+# rules are identical anyway. Change one, change the other.
+
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=()
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; media-src 'self'; object-src 'none'; connect-src 'self' https://formsubmit.co; form-action 'self' https://formsubmit.co; frame-ancestors 'none'; base-uri 'self'
+
+# Fonts are content-addressed by filename, so a year of immutable caching can
+# never strand anyone on a stale one. Nothing else here is versioned that way.
+/assets/fonts/*
+  Cache-Control: public, max-age=31536000, immutable

@@ -1,8 +1,31 @@
-# Publish only what belongs on the public internet. The repo root holds
-# README.md and serve.ps1 — internal notes and a local dev server that have
-# no business being served at bndrvids.com/README.md.
+# Flat static site — nothing to build, so the repo root is the publish root.
+#
+# That means every file committed here is reachable at bndrvids.com/<name>,
+# including the ones written for whoever maintains the site rather than for
+# a customer. The redirects below 404 those explicitly instead of relying on
+# nobody guessing the filename.
 [build]
   publish = "."
+
+# Internal files that live in the repo but have no business being served.
+# force = true so these win over the static file that is actually sitting there.
+[[redirects]]
+  from = "/README.md"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/serve.ps1"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/assets/fonts/README.txt"
+  to = "/404.html"
+  status = 404
+  force = true
 
 [[headers]]
   for = "/*"
@@ -11,8 +34,18 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "geolocation=(), microphone=(), camera=(), payment=()"
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; media-src 'self'; connect-src 'self' https://formsubmit.co; form-action 'self' https://formsubmit.co; frame-ancestors 'none'; base-uri 'self'"
+    # Both Google Fonts hosts are gone from this policy because both fonts are
+    # now served from /assets/fonts. The policy is the check on that: if anyone
+    # re-adds a fonts.googleapis.com <link>, the stylesheet is blocked outright
+    # rather than quietly reintroducing a third-party request.
+    # object-src 'none' is not covered by default-src on older engines, so it
+    # is stated rather than inherited.
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; media-src 'self'; object-src 'none'; connect-src 'self' https://formsubmit.co; form-action 'self' https://formsubmit.co; frame-ancestors 'none'; base-uri 'self'"
 
+# Fonts are content-addressed by filename: a different cut gets a different
+# name, so a year of immutable caching can never strand anyone on a stale one.
+# Nothing else here is versioned that way, so nothing else gets this treatment —
+# Netlify's ETag revalidation is the right default for site.css and site.js.
 [[headers]]
   for = "/assets/fonts/*"
   [headers.values]

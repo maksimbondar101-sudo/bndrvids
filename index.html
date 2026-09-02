@@ -10,20 +10,80 @@
 <meta property="og:description" content="Walkthrough tours for properties, built from the photos you already have. No shoot. No scheduling. No site visit.">
 <meta property="og:type" content="website">
 <meta name="theme-color" content="#0A0A0B">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" href="assets/fonts/DMSans.ttf" as="font" type="font/ttf" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&display=swap" rel="stylesheet">
+<link rel="preload" href="assets/fonts/DMSans.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/DMSerifDisplay-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
 <meta property="og:image" content="https://bndrvids.com/assets/img/og-image.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="BNDRVIDS — walkthrough video for properties, built from listing photos.">
 <meta property="og:url" content="https://bndrvids.com/">
 <meta property="og:site_name" content="BNDRVIDS">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="canonical" href="https://bndrvids.com/">
 <link rel="stylesheet" href="assets/css/site.css">
+
+<!-- Structured data. Every value here restates something already stated in
+     visible copy on this site — the two prices, the email, the founder, the
+     no-cost sample. Nothing is asserted to a search engine that a visitor
+     cannot also read on the page. Keep it that way: if a price changes on
+     /pricing it has to change here in the same commit. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://bndrvids.com/#org",
+      "name": "BNDRVIDS",
+      "url": "https://bndrvids.com/",
+      "logo": "https://bndrvids.com/assets/img/logo-wordmark.png",
+      "image": "https://bndrvids.com/assets/img/og-image.jpg",
+      "email": "bndrvids@gmail.com",
+      "description": "Property walkthrough videos built from the listing photos a property already has \u2014 no shoot, no scheduling, no site visit.",
+      "founder": { "@type": "Person", "name": "Maksim Bondar" },
+      "areaServed": { "@type": "Country", "name": "United States" },
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "sales",
+        "email": "bndrvids@gmail.com",
+        "areaServed": "US",
+        "availableLanguage": "English"
+      }
+    },
+    {
+      "@type": "Service",
+      "@id": "https://bndrvids.com/#service",
+      "name": "Property walkthrough video from listing photos",
+      "serviceType": "Real estate video production",
+      "provider": { "@id": "https://bndrvids.com/#org" },
+      "areaServed": { "@type": "Country", "name": "United States" },
+      "description": "A walkthrough video of a property, built from the photos already on its listing. Nothing is shot on site and no space is shown that the photo set does not cover.",
+      "offers": [
+        {
+          "@type": "Offer",
+          "name": "Standard",
+          "description": "Walkthrough up to 90 seconds, branded, vertical and horizontal, with the exports the listing portals and social platforms take.",
+          "price": "300",
+          "priceCurrency": "USD",
+          "url": "https://bndrvids.com/pricing",
+          "availability": "https://schema.org/InStock"
+        },
+        {
+          "@type": "Offer",
+          "name": "Premium",
+          "description": "Whole-property film up to 3 minutes with voiceover, captions, branded intro and outro, and a separate cut per floor plan.",
+          "price": "450",
+          "priceCurrency": "USD",
+          "url": "https://bndrvids.com/pricing",
+          "availability": "https://schema.org/InStock"
+        }
+      ]
+    }
+  ]
+}
+</script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -33,7 +93,7 @@
   <div class="container nav__inner">
     <a class="nav__logo" href="/">BNDRVIDS</a>
     <nav class="nav__links" id="nav-menu" aria-label="Primary">
-      <a href="/">Home</a>
+      <a href="/" aria-current="page">Home</a>
       <a href="/pricing">Pricing</a>
       <a href="/how-it-works">How it works</a>
       <a href="/about">About</a>
@@ -113,13 +173,18 @@
       </div>
 
       <div class="swap reveal" style="--i:1">
+        <!-- Six real listing photos belong in these frames — one <img> each,
+             loading="lazy" decoding="async". Until they exist the numbered
+             labels make the strip read as a contact sheet rather than as six
+             slots that failed to load; site.js fades each label out the moment
+             its image decodes, so dropping the files in needs no other edit. -->
         <div class="swap__photos">
-          <div class="media media--4x3"></div>
-          <div class="media media--4x3"></div>
-          <div class="media media--4x3"></div>
-          <div class="media media--4x3"></div>
-          <div class="media media--4x3"></div>
-          <div class="media media--4x3"></div>
+          <div class="media media--4x3" data-label="01"></div>
+          <div class="media media--4x3" data-label="02"></div>
+          <div class="media media--4x3" data-label="03"></div>
+          <div class="media media--4x3" data-label="04"></div>
+          <div class="media media--4x3" data-label="05"></div>
+          <div class="media media--4x3" data-label="06"></div>
         </div>
 
         <div class="swap__mid">
@@ -233,7 +298,7 @@
         <details>
           <summary>Is this AI?</summary>
           <div class="faq__a">
-            <p>We use automated tooling to turn still photos into a moving walkthrough — that's what lets us build one before you've paid anything, and what makes this price possible.</p>
+            <p>Yes. We use automated tooling to turn still photos into a moving walkthrough — that's what lets us build one before you've paid anything, and what makes this price possible.</p>
             <p>What matters is the source. Every video is built from your listing's own photos. We don't substitute stock footage or interiors from another property.</p>
           </div>
         </details>

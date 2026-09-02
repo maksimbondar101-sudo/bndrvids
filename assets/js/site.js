@@ -28,6 +28,7 @@
     }, { passive: true });
 
     var toggle = nav.querySelector('.nav__toggle');
+    var panel = nav.querySelector('.nav__links');
     if (toggle) {
       var setMenu = function (open) {
         nav.classList.toggle('is-open', open);
@@ -36,7 +37,39 @@
         /* Without this the page kept scrolling under a fixed menu panel, so
            closing it dropped you somewhere you never chose to go. */
         document.body.style.overflow = open ? 'hidden' : '';
+
+        /* The panel sits BEFORE the toggle in source order, so tabbing forward
+           from an open menu walked straight past it into the page underneath —
+           a keyboard or switch user could open the menu and never reach a
+           single link in it. Send focus into the panel on open, and hand it
+           back to the button that opened it on close. */
+        if (open) {
+          var first = panel && panel.querySelector('a');
+          if (first) first.focus();
+        }
       };
+
+      /* Keep Tab inside the panel while it is open. Without the wrap, focus
+         leaves at either end and lands on content the menu is covering. */
+      if (panel) {
+        panel.addEventListener('keydown', function (event) {
+          if (event.key !== 'Tab' && event.keyCode !== 9) return;
+          if (!nav.classList.contains('is-open')) return;
+
+          var stops = panel.querySelectorAll('a[href]');
+          if (!stops.length) return;
+          var first = stops[0];
+          var last = stops[stops.length - 1];
+
+          if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            toggle.focus();          /* backwards out of the panel = the button */
+          } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
+          }
+        });
+      }
 
       toggle.addEventListener('click', function () {
         setMenu(!nav.classList.contains('is-open'));
@@ -52,9 +85,15 @@
       });
 
       /* Tapping the link for the page you are already on navigates nowhere, so
-         the menu would sit there open over the page you asked to see. */
+         the menu would sit there open over the page you asked to see. Close it
+         without pulling focus — the browser is about to move focus itself. */
       Array.prototype.forEach.call(nav.querySelectorAll('.nav__links a'), function (link) {
-        link.addEventListener('click', function () { setMenu(false); });
+        link.addEventListener('click', function () {
+          nav.classList.remove('is-open');
+          toggle.setAttribute('aria-expanded', 'false');
+          toggle.textContent = 'Menu';
+          document.body.style.overflow = '';
+        });
       });
 
       /* Crossing back to desktop with the menu open leaves body scroll locked
@@ -115,16 +154,56 @@
         probe.src = posterSrc;
       }
 
-      /* Tiles play on hover (desktop) and on tap (touch); the hero loops always. */
+      /* Tiles play on hover (desktop) and on tap (touch); the hero loops always.
+         The touch half of that was only ever a comment — nothing was bound to
+         it — so on a phone these tiles were a still frame with no way to make
+         them move. That is the entire product demo, unreachable on the device
+         most of this traffic arrives on.
+
+         Hover is gated on a fine pointer so a touch browser's synthesised
+         mouseenter can't fire the play-then-pause pair on the same tap that is
+         meant to start it. */
       if (frame.hasAttribute('data-hover')) {
-        frame.addEventListener('mouseenter', function () {
+        var play = function () {
           var p = video.play();
           if (p && p.catch) p.catch(function () {});
-        });
-        frame.addEventListener('mouseleave', function () {
+        };
+        var stop = function () {
           video.pause();
           video.currentTime = 0;
-        });
+        };
+
+        var fine = window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+        if (fine) {
+          frame.addEventListener('mouseenter', play);
+          frame.addEventListener('mouseleave', stop);
+        } else {
+          /* Tap to start, tap again to stop. A tile that plays once and can
+             never be replayed is worse than one that never played. */
+          frame.addEventListener('click', function () {
+            if (video.paused) play(); else stop();
+          });
+        }
+
+        /* Keyboard parity — but only once there is something to play. While
+           these tiles are still empty scaffolding (poster, no <source>), a
+           focusable role="button" would be a tab stop that does nothing, which
+           is a worse defect than the one it fixes. The moment a file is dropped
+           in, the tile becomes a real control. */
+        if (video.getAttribute('src') || video.querySelector('source')) {
+          frame.setAttribute('tabindex', '0');
+          frame.setAttribute('role', 'button');
+          if (!frame.getAttribute('aria-label')) {
+            frame.setAttribute('aria-label', 'Play preview video');
+          }
+          frame.addEventListener('keydown', function (event) {
+            if (event.key !== 'Enter' && event.key !== ' ' && event.keyCode !== 13 && event.keyCode !== 32) return;
+            event.preventDefault();
+            if (video.paused) play(); else stop();
+          });
+          frame.addEventListener('blur', stop);
+        }
       }
     }
 
@@ -331,7 +410,11 @@
     });
   }
 
-  /* --- Footer year --------------------------------------------------------- */
-  var year = document.querySelector('[data-year]');
-  if (year) year.textContent = new Date().getFullYear();
+  /* --- Footer year ---------------------------------------------------------
+     querySelectorAll, not querySelector: there is one per page today, and the
+     day someone adds a second the singular version silently leaves it stale. */
+  var thisYear = String(new Date().getFullYear());
+  Array.prototype.forEach.call(document.querySelectorAll('[data-year]'), function (el) {
+    el.textContent = thisYear;
+  });
 })();

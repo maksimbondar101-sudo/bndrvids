@@ -104,6 +104,7 @@
       <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="nav-menu">Menu</button>
       <a class="btn btn--solid" href="/start">Schedule a call</a>
     </div>
+    <div class="nav__progress" aria-hidden="true"></div>
   </div>
 </header>
 
@@ -179,12 +180,12 @@
              slots that failed to load; site.js fades each label out the moment
              its image decodes, so dropping the files in needs no other edit. -->
         <div class="swap__photos">
-          <div class="media media--4x3" data-label="01"></div>
-          <div class="media media--4x3" data-label="02"></div>
-          <div class="media media--4x3" data-label="03"></div>
-          <div class="media media--4x3" data-label="04"></div>
-          <div class="media media--4x3" data-label="05"></div>
-          <div class="media media--4x3" data-label="06"></div>
+          <div class="media media--4x3" data-label="01" style="--n:0"></div>
+          <div class="media media--4x3" data-label="02" style="--n:1"></div>
+          <div class="media media--4x3" data-label="03" style="--n:2"></div>
+          <div class="media media--4x3" data-label="04" style="--n:3"></div>
+          <div class="media media--4x3" data-label="05" style="--n:4"></div>
+          <div class="media media--4x3" data-label="06" style="--n:5"></div>
         </div>
 
         <div class="swap__mid">
@@ -199,6 +200,10 @@
             </video>
           </div>
           <p class="micro" style="margin-top:16px">Built from listing photos · 62 seconds</p>
+          <!-- A demonstration you can ask to see again, rather than one that
+               loops at you. Hidden under reduced-motion, where the sequence
+               lands in its finished state instead of playing. -->
+          <button class="swap__replay" type="button" data-swap-replay>Play it again</button>
         </div>
       </div>
     </div>

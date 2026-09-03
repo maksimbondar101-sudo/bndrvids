@@ -42,6 +42,7 @@
       <button class="nav__toggle" type="button" aria-expanded="false" aria-controls="nav-menu">Menu</button>
       <a class="btn btn--solid" href="/start">Schedule a call</a>
     </div>
+    <div class="nav__progress" aria-hidden="true"></div>
   </div>
 </header>
 
@@ -116,6 +117,38 @@
             <dd>Your logo and brand colors. Send them a single time and every video after matches automatically.</dd>
           </div>
         </dl>
+
+        <!-- ── The photo gauge ────────────────────────────────────────────
+             The Photos row above is a threshold rule with four bands, and
+             every one of these conversations opens with someone applying it
+             to themselves. Making it a control answers that before they have
+             to ask. The copy in site.js is this policy, not a new one — if
+             the row above changes, the bands change with it.
+        ─────────────────────────────────────────────────────────────────── -->
+        <div class="gauge reveal" style="--i:2" data-gauge>
+          <div class="gauge__top">
+            <label class="gauge__label" for="gauge-input">How many photos does your listing have?</label>
+            <div class="gauge__count" data-gauge-count aria-hidden="true">12</div>
+          </div>
+
+          <div class="gauge__track">
+            <!-- Drawn to scale against the slider, so where "enough" starts is
+                 visible before the control is touched. -->
+            <div class="gauge__bands" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+            <input type="range" id="gauge-input" min="1" max="30" value="12" step="1"
+                   aria-describedby="gauge-verdict">
+            <div class="gauge__scale" aria-hidden="true">
+              <span>1–3</span><span>4–9</span><span>10–15</span><span>16+</span>
+            </div>
+          </div>
+
+          <!-- aria-live, because the answer is the entire point of the control
+               and a screen-reader user gets no benefit from the number alone. -->
+          <div class="gauge__verdict" id="gauge-verdict" data-gauge-verdict aria-live="polite">
+            <strong>Plenty.</strong>
+            <p>Ten to fifteen covers a unit comfortably, room by room, with enough angles to move between them rather than cut.</p>
+          </div>
+        </div>
       </div>
 
       <div class="needs__viz reveal" style="--i:2">

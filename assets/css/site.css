@@ -10,7 +10,11 @@
      · Three spacing gaps: 96 section / 48 block / 16 element. No exceptions.
      · Zero border-radius, everywhere.
      · Two buttons: solid, ghost. Same height, same padding.
-     · One motion gesture: fade + 12px rise, 500ms. Nothing else.
+     · One ambient motion gesture: fade + 12px rise, 500ms. Everything else
+       that moves is a response to something — a scroll position, a pointer, a
+       value someone set. Nothing else plays on its own.
+     · Interactive controls answer immediately and in place. A control that
+       makes you scroll to find out what it did is not interactive.
    ========================================================================== */
 
 /* --- Fonts -----------------------------------------------------------------
@@ -1164,4 +1168,312 @@ html { color-scheme: dark; scrollbar-color: #2A2A2E var(--base); }
   .media[data-hover]:hover > video,
   .media[data-hover]:hover > img { transform: none; }
   html { scroll-behavior: auto; }
+}
+
+
+/* ============================================================================
+   INTERACTION LAYER
+   ----------------------------------------------------------------------------
+   Everything below was added after the site had been live enough to see where
+   it stalls. Three of these are controls, not decoration — the photo gauge,
+   the listing-field readout and the FAQ — and they exist because the page was
+   asking people questions it already knew the answer to.
+
+   The rule the original file set (one gesture, nothing else) still holds for
+   ambient motion. What is added here is reactive: it runs because someone
+   scrolled, pointed, or set a value. The prefers-reduced-motion block at the
+   end of this file already neutralises transitions globally; the specific
+   opt-outs each feature needs sit with that feature.
+   ========================================================================== */
+
+/* --- Scroll progress: a hairline under the fixed header ---------------------
+   The site is long and the sections are tall, so "how much of this is left"
+   is a real question on a first visit. One pixel of accent answers it without
+   occupying any layout. Width is driven from JS as a transform, so it costs a
+   compositor frame and never a reflow.
+  ------------------------------------------------------------------------- */
+.nav__progress {
+  position: absolute;
+  left: 0; right: 0; bottom: -1px;
+  height: 1px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  opacity: 0;
+  transition: opacity 300ms var(--ease);
+  pointer-events: none;
+}
+.nav.is-scrolled .nav__progress { opacity: 1; }
+
+/* --- The swap block, animated ----------------------------------------------
+   This block makes the site's central claim — six photos become one moving
+   walkthrough — and with no photography to put in the frames it was making it
+   with six empty rectangles. Motion carries the argument instead: the frames
+   light in sequence, the way the walkthrough moves through them, and the
+   output frame takes the accent as they land.
+
+   It plays once when the block arrives, and replays on pointer or focus, so
+   it reads as a demonstration rather than a loop running for its own sake.
+  ------------------------------------------------------------------------- */
+.swap__photos .media {
+  transition: filter 600ms var(--ease), border-color 600ms var(--ease);
+  border: 1px solid transparent;
+}
+.swap.is-playing .swap__photos .media {
+  animation: swap-lift 2600ms var(--ease) both;
+  animation-delay: calc(var(--n) * 190ms);
+}
+@keyframes swap-lift {
+  0%   { filter: saturate(0.55) brightness(0.78); border-color: transparent; }
+  14%  { filter: saturate(1) brightness(1.18);    border-color: var(--accent); }
+  46%  { filter: saturate(0.7) brightness(0.92);  border-color: transparent; }
+  100% { filter: saturate(0.55) brightness(0.78); border-color: transparent; }
+}
+
+/* The rule between the two halves fills left-to-right as the frames land, so
+   the connection between them is drawn rather than implied. */
+.swap__rule { position: relative; overflow: hidden; }
+.swap__rule::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--accent);
+  transform: scaleY(0);
+  transform-origin: top;
+}
+.swap.is-playing .swap__rule::after { animation: swap-fill 2600ms var(--ease) both; }
+@keyframes swap-fill {
+  0%, 18% { transform: scaleY(0); }
+  60%     { transform: scaleY(1); }
+  100%    { transform: scaleY(1); opacity: 0.35; }
+}
+@media (max-width: 1000px) {
+  .swap__rule::after { transform-origin: left; }
+  @keyframes swap-fill {
+    0%, 18% { transform: scaleX(0); }
+    60%     { transform: scaleX(1); }
+    100%    { transform: scaleX(1); opacity: 0.35; }
+  }
+}
+
+/* The output frame receives them: one sweep of accent across the top edge. */
+.swap__out .media::after {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  background: var(--accent);
+  z-index: 4;
+  transform: scaleX(0);
+  transform-origin: left;
+}
+.swap.is-playing .swap__out .media::after { animation: swap-receive 2600ms var(--ease) both; }
+@keyframes swap-receive {
+  0%, 40% { transform: scaleX(0); opacity: 1; }
+  74%     { transform: scaleX(1); opacity: 1; }
+  100%    { transform: scaleX(1); opacity: 0; }
+}
+
+/* Replaying is a real affordance, so it looks like one and takes focus. */
+.swap__replay {
+  margin-top: 14px;
+  font-size: var(--t-micro);
+  letter-spacing: var(--ls-micro);
+  text-transform: uppercase;
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  transition: color 300ms var(--ease);
+}
+.swap__replay:hover { color: var(--text); }
+.swap__replay::before {
+  content: '';
+  width: 14px; height: 1px;
+  background: currentColor;
+  transition: width 300ms var(--ease);
+}
+.swap__replay:hover::before { width: 24px; }
+
+/* --- Photo gauge: the one number people actually want checked ---------------
+   "Do we have enough photos?" is the first question on every one of these
+   conversations, and the answer was four lines of prose in a table on
+   /how-it-works that you had to read and then apply to yourself. It is a
+   threshold rule with four bands — which is a control, not a paragraph.
+
+   Every band's text is the site's own existing policy, not a new promise.
+  ------------------------------------------------------------------------- */
+.gauge {
+  border: 1px solid var(--line-strong);
+  background: var(--wash);
+  padding: 32px;
+  margin-top: var(--gap-block);
+}
+.gauge__top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--gap-element);
+  flex-wrap: wrap;
+}
+.gauge__label {
+  font-size: var(--t-micro);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-micro);
+  color: var(--muted);
+}
+.gauge__count {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  line-height: 1;
+  letter-spacing: var(--ls-display);
+  font-variant-numeric: tabular-nums;
+}
+.gauge__count span { font-size: var(--t-sm); color: var(--muted); font-family: var(--font-sans); margin-left: 8px; letter-spacing: 0; }
+
+/* The track is the four bands, drawn to scale, so the thresholds are visible
+   before you touch the control — you can see where "enough" starts. */
+.gauge__track { position: relative; margin-top: 24px; }
+/* 3 : 6 : 6 : 15 is not an aesthetic ratio — it is the count of slider values
+   in each band (1-3, 4-9, 10-15, 16-30). The bar sits directly above the
+   thumb, so any other split would put the drawn threshold somewhere the
+   verdict does not actually change. Change the bands in site.js and these
+   numbers change with them. */
+.gauge__bands { display: grid; grid-template-columns: 3fr 6fr 6fr 15fr; gap: 2px; height: 4px; }
+.gauge__bands i { background: var(--line); transition: background 400ms var(--ease); }
+.gauge__bands i.is-active { background: var(--accent); }
+
+/* Overlaid on the band bar rather than stacked under it: the thumb marking a
+   position on a track it visibly sits on is the whole reading of the control.
+   Stacked, they were two separate graphics that happened to share a width. */
+.gauge input[type="range"] {
+  -webkit-appearance: none; appearance: none;
+  position: absolute;
+  top: -10px; left: 0;
+  width: 100%;
+  margin: 0;
+  height: 24px;
+  background: none;
+  cursor: pointer;
+}
+.gauge input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 14px; height: 14px;
+  background: var(--text);
+  border: none;
+  cursor: grab;
+}
+.gauge input[type="range"]::-moz-range-thumb {
+  width: 14px; height: 14px;
+  background: var(--text);
+  border: none;
+  border-radius: 0;
+  cursor: grab;
+}
+.gauge input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+
+/* Same track as the bands, so each label sits under the band it names. Naming
+   the ranges rather than the edges also removes the off-by-one a reader has to
+   resolve for themselves ("is 4 in the first group or the second?"). */
+.gauge__scale {
+  display: grid;
+  grid-template-columns: 3fr 6fr 6fr 15fr;
+  gap: 2px;
+  font-size: 10px;
+  letter-spacing: var(--ls-micro);
+  color: var(--muted);
+  margin-top: 18px;   /* clears the overlaid slider's 24px hit area */
+}
+.gauge__scale span { text-align: center; transition: color 400ms var(--ease); }
+.gauge__scale span.is-active { color: var(--text); }
+@media (max-width: 480px) { .gauge__scale { font-size: 9px; letter-spacing: 0.06em; } }
+.gauge__verdict { margin-top: 24px; border-top: 1px solid var(--line); padding-top: 20px; }
+.gauge__verdict strong {
+  display: block;
+  font-size: var(--t-md);
+  font-weight: 400;
+  letter-spacing: var(--ls-h3);
+  line-height: var(--lh-h3);
+}
+.gauge__verdict strong.is-low { color: var(--accent); }
+.gauge__verdict p { font-size: var(--t-sm); color: var(--muted); margin-top: 8px; max-width: 52ch; }
+/* Swapping the text is the whole point of the control, so the swap is visible
+   — otherwise a dragged slider looks like it changed nothing. */
+.gauge__verdict.is-changing strong,
+.gauge__verdict.is-changing p { opacity: 0; transform: translateY(4px); }
+.gauge__verdict strong, .gauge__verdict p {
+  transition: opacity 200ms var(--ease), transform 200ms var(--ease);
+}
+@media (max-width: 620px) { .gauge { padding: 24px; } }
+
+/* --- Listing field: say what you recognised ---------------------------------
+   Someone pastes a URL into a field labelled "Paste a listing link" and gets
+   no acknowledgement that anything landed. The readout below names the portal
+   back to them, which is the cheapest possible proof that the thing on the
+   other end is paying attention.
+  ------------------------------------------------------------------------- */
+.inputrow { position: relative; }
+.listingnote {
+  display: block;
+  font-size: var(--t-micro);
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin-top: 10px;
+  min-height: 1.2em;
+  opacity: 0;
+  transform: translateY(-2px);
+  transition: opacity 300ms var(--ease), transform 300ms var(--ease);
+}
+.listingnote.is-shown { opacity: 1; transform: none; }
+.listingnote b { color: var(--text); font-weight: 500; }
+.listingnote.is-warn b { color: var(--accent); }
+
+/* --- FAQ: open and close, rather than jump ---------------------------------
+   <details> snaps its panel in at full height, which on a list this long
+   throws every question below it down the page mid-read. The panel now has a
+   height to travel, so the questions under it move at a speed the eye tracks.
+  ------------------------------------------------------------------------- */
+.faq .faq__a {
+  display: grid;
+  grid-template-rows: 0fr;
+  padding-bottom: 0;
+  transition: grid-template-rows 380ms var(--ease), padding-bottom 380ms var(--ease), opacity 300ms var(--ease);
+  opacity: 0;
+}
+.faq .faq__a > * { min-height: 0; }
+.faq details[open] .faq__a { grid-template-rows: 1fr; padding-bottom: 32px; opacity: 1; }
+/* Set by site.js for the length of the closing transition: the element is still
+   [open] so its content stays rendered, but it is already collapsing. */
+.faq details[open].is-closing .faq__a { grid-template-rows: 0fr; padding-bottom: 0; opacity: 0; }
+.faq details[open].is-closing summary::after { transform: rotate(0deg); }
+/* The grid rows need a wrapper to animate against; site.js inserts it. */
+.faq .faq__inner { overflow: hidden; }
+.faq summary::after { transition: transform 380ms var(--ease), color 300ms var(--ease); }
+.faq summary:hover::after { color: var(--text); }
+
+/* --- Card response ---------------------------------------------------------
+   The pricing cards and the four "won't do" items were the only large blocks
+   on the site that a pointer passed straight through. A one-pixel border
+   change is the whole gesture — same restraint as the nav underline.
+  ------------------------------------------------------------------------- */
+.tier, .absence__item, .proof__item {
+  transition: border-color 400ms var(--ease), background 400ms var(--ease);
+}
+.tier:hover { border-color: var(--line-strong); background: #17171A; }
+.step { transition: opacity 400ms var(--ease); }
+.steps:hover .step { opacity: 0.55; }
+.steps .step:hover { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  /* The swap sequence is an argument, not an ornament, so it lands in its
+     finished state rather than being removed: frames lit, rule filled. */
+  .swap.is-playing .swap__photos .media,
+  .swap.is-playing .swap__rule::after,
+  .swap.is-playing .swap__out .media::after { animation: none; }
+  .swap.is-playing .swap__rule::after { transform: scaleY(1); opacity: 0.35; }
+  .swap__replay { display: none; }
+  .faq .faq__a { transition: none; }
+  .steps:hover .step { opacity: 1; }
+  .listingnote { transition: none; }
 }

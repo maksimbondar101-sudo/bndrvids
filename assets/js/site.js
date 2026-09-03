@@ -410,6 +410,251 @@
     });
   }
 
+  /* --- FAQ: animate the close as well as the open --------------------------
+     CSS can animate opening on its own, because [open] lands before the
+     transition runs. Closing it cannot: the browser hides a closed <details>
+     element's content immediately, so the panel is gone before any transition
+     has a frame to play in. Intercepting the click is the only way to keep the
+     answer on screen long enough to collapse.
+
+     Without JS this degrades to the native snap — still a working accordion.
+  ----------------------------------------------------------------------- */
+  Array.prototype.forEach.call(document.querySelectorAll('.faq details'), function (item) {
+    var panel = item.querySelector('.faq__a');
+    var summary = item.querySelector('summary');
+    if (!panel || !summary) return;
+
+    /* The grid-rows collapse needs a child to size against, so the answer's
+       own contents move into a wrapper. Done here rather than in the markup
+       so the HTML stays readable and a JS-less page keeps plain <p> children. */
+    var inner = document.createElement('div');
+    inner.className = 'faq__inner';
+    while (panel.firstChild) inner.appendChild(panel.firstChild);
+    panel.appendChild(inner);
+
+    var closing = false;
+
+    summary.addEventListener('click', function (event) {
+      if (reduced) return;                       /* native snap, no waiting */
+      if (!item.open || closing) return;         /* opening is CSS's job */
+
+      event.preventDefault();
+      closing = true;
+      item.classList.add('is-closing');
+
+      var done = function () {
+        item.open = false;
+        item.classList.remove('is-closing');
+        closing = false;
+      };
+
+      /* transitionend can be missed — an interrupted transition, a display
+         change mid-flight, a tab backgrounded. The timeout guarantees the
+         panel actually closes rather than sitting half-collapsed forever. */
+      var fallback = window.setTimeout(done, 460);
+      panel.addEventListener('transitionend', function once(e) {
+        if (e.propertyName !== 'grid-template-rows') return;
+        panel.removeEventListener('transitionend', once);
+        window.clearTimeout(fallback);
+        done();
+      });
+    });
+  });
+
+  /* --- Scroll progress ------------------------------------------------------
+     Same rAF throttle as the nav state, and for the same reason: this reads
+     scrollY, and doing that per scroll event rather than per frame is how a
+     progress bar ends up costing more than the page it measures. */
+  var progress = document.querySelector('.nav__progress');
+  if (progress) {
+    var pTicking = false;
+    var drawProgress = function () {
+      var doc = document.documentElement;
+      var scrollable = doc.scrollHeight - window.innerHeight;
+      /* A page shorter than the viewport has no progress to report, and the
+         division would be by zero. */
+      var ratio = scrollable > 0 ? Math.min(1, Math.max(0, window.scrollY / scrollable)) : 0;
+      progress.style.transform = 'scaleX(' + ratio + ')';
+      pTicking = false;
+    };
+    drawProgress();
+    window.addEventListener('scroll', function () {
+      if (!pTicking) { pTicking = true; window.requestAnimationFrame(drawProgress); }
+    }, { passive: true });
+    window.addEventListener('resize', drawProgress);
+  }
+
+  /* --- The swap sequence ----------------------------------------------------
+     Plays once when the block arrives, and again on demand. Restarting a CSS
+     animation needs the class off, a reflow read, then the class back on —
+     without the read the browser coalesces both changes into no change. */
+  var swap = document.querySelector('.swap');
+  if (swap) {
+    var playSwap = function () {
+      swap.classList.remove('is-playing');
+      void swap.offsetWidth;                 /* forces the restart; do not remove */
+      swap.classList.add('is-playing');
+    };
+
+    if (reduced || !('IntersectionObserver' in window)) {
+      swap.classList.add('is-playing');
+    } else {
+      var swapIO = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          playSwap();
+          swapIO.unobserve(entry.target);
+        });
+      }, { threshold: 0.35 });
+      swapIO.observe(swap);
+    }
+
+    var replay = swap.querySelector('[data-swap-replay]');
+    if (replay) replay.addEventListener('click', playSwap);
+  }
+
+  /* --- Listing field: name the portal back --------------------------------
+     Recognition only — nothing here blocks a submission. Someone pasting a
+     link we do not know still has a working form; they just get "your own
+     site" instead of a brand name. The one case worth flagging is text that
+     is not a link at all, because that is the one that wastes an email. */
+  var PORTALS = [
+    { host: 'zillow.',        name: 'Zillow' },
+    { host: 'apartments.com', name: 'Apartments.com' },
+    { host: 'redfin.',        name: 'Redfin' },
+    { host: 'realtor.com',    name: 'Realtor.com' },
+    { host: 'trulia.',        name: 'Trulia' },
+    { host: 'rent.com',       name: 'Rent.com' },
+    { host: 'hotpads.',       name: 'HotPads' },
+    { host: 'streeteasy.',    name: 'StreetEasy' },
+    { host: 'padmapper.',     name: 'PadMapper' },
+    { host: 'zumper.',        name: 'Zumper' },
+    { host: 'loopnet.',       name: 'LoopNet' },
+    { host: 'costar.',        name: 'CoStar' },
+    { host: 'drive.google.',  name: 'Google Drive', folder: true },
+    { host: 'photos.google.', name: 'Google Photos', folder: true },
+    { host: 'dropbox.',       name: 'Dropbox', folder: true },
+    { host: 'onedrive.',      name: 'OneDrive', folder: true },
+    { host: '1drv.ms',        name: 'OneDrive', folder: true },
+    { host: 'icloud.',        name: 'iCloud', folder: true },
+    { host: 'wetransfer.',    name: 'WeTransfer', folder: true },
+    { host: 'box.com',        name: 'Box', folder: true }
+  ];
+
+  var describeListing = function (value) {
+    var v = value.trim();
+    if (!v) return null;
+
+    var host = '';
+    try {
+      /* Most people paste without a scheme. Adding one is what makes URL()
+         usable here instead of a regex that has to re-learn hostnames. */
+      host = new URL(/^[a-z][a-z0-9+.-]*:\/\//i.test(v) ? v : 'https://' + v).hostname.toLowerCase();
+    } catch (e) {
+      host = '';
+    }
+
+    /* No dot in the host means it is not a domain — it is a sentence, an
+       address, or a unit number. That is the only case worth correcting. */
+    if (!host || host.indexOf('.') === -1) {
+      return { warn: true, html: 'That doesn\u2019t look like a link. Paste the listing URL, or a link to a folder of photos.' };
+    }
+
+    for (var i = 0; i < PORTALS.length; i++) {
+      if (host.indexOf(PORTALS[i].host) !== -1) {
+        return PORTALS[i].folder
+          ? { html: '<b>' + PORTALS[i].name + '</b> \u2014 we\u2019ll pull the photos from the folder.' }
+          : { html: '<b>' + PORTALS[i].name + '</b> listing \u2014 we\u2019ll pull the photos from it.' };
+      }
+    }
+    return { html: '<b>' + host.replace(/^www\./, '') + '</b> \u2014 we\u2019ll pull the photos from it.' };
+  };
+
+  Array.prototype.forEach.call(document.querySelectorAll('[data-listing-form]'), function (form) {
+    var field = form.querySelector('input[name="listing"]');
+    if (!field) return;
+
+    var note = document.createElement('span');
+    note.className = 'listingnote';
+    note.setAttribute('aria-live', 'polite');
+    form.appendChild(note);
+
+    var update = function () {
+      var result = describeListing(field.value);
+      if (!result) {
+        note.classList.remove('is-shown', 'is-warn');
+        note.innerHTML = '';
+        return;
+      }
+      note.innerHTML = result.html;
+      note.classList.toggle('is-warn', !!result.warn);
+      note.classList.add('is-shown');
+    };
+
+    field.addEventListener('input', update);
+    field.addEventListener('paste', function () { window.setTimeout(update, 0); });
+    if (field.value) update();
+  });
+
+  /* --- Photo gauge ----------------------------------------------------------
+     Bands and copy are the requirements table on /how-it-works, unchanged —
+     this control restates the site's existing policy, it does not set new
+     terms. If that policy changes, it changes in both places. */
+  var gauge = document.querySelector('[data-gauge]');
+  if (gauge) {
+    var slider  = gauge.querySelector('input[type="range"]');
+    var count   = gauge.querySelector('[data-gauge-count]');
+    var verdict = gauge.querySelector('[data-gauge-verdict]');
+    var vTitle  = verdict.querySelector('strong');
+    var vBody   = verdict.querySelector('p');
+    var bands   = gauge.querySelectorAll('.gauge__bands i');
+    var marks   = gauge.querySelectorAll('.gauge__scale span');
+
+    var BANDS = [
+      { max: 3, band: 0, low: true,
+        title: 'We\u2019d tell you not to bother.',
+        body: 'Below four photos there isn\u2019t enough to build a walkthrough worth paying for. Send it anyway \u2014 we\u2019ll say so before you pay, rather than take the money.' },
+      { max: 9, band: 1,
+        title: 'Six works. Expect a short one.',
+        body: 'Bad lighting and odd angles we can work with, and usually improve. What we can\u2019t do is invent coverage \u2014 the walkthrough only goes where your photos went.' },
+      { max: 15, band: 2,
+        title: 'Plenty.',
+        body: 'Ten to fifteen covers a unit comfortably, room by room, with enough angles to move between them rather than cut.' },
+      { max: Infinity, band: 3,
+        title: 'Ideal.',
+        body: 'More than fifteen is where this gets good \u2014 every extra angle gives the walkthrough somewhere else to go.' }
+    ];
+
+    var render = function () {
+      var n = parseInt(slider.value, 10);
+      var match = BANDS[0];
+      for (var i = 0; i < BANDS.length; i++) { if (n <= BANDS[i].max) { match = BANDS[i]; break; } }
+
+      count.textContent = n >= 30 ? '30+' : String(n);
+
+      Array.prototype.forEach.call(bands, function (b, i) {
+        b.classList.toggle('is-active', i <= match.band);
+      });
+      /* The label lights for the band you are IN, not every band you passed —
+         the filled bar already shows how far along you are. */
+      Array.prototype.forEach.call(marks, function (m, i) {
+        m.classList.toggle('is-active', i === match.band);
+      });
+
+      if (vTitle.textContent === match.title) return;   /* same band, no flicker */
+      verdict.classList.add('is-changing');
+      window.setTimeout(function () {
+        vTitle.textContent = match.title;
+        vTitle.classList.toggle('is-low', !!match.low);
+        vBody.textContent = match.body;
+        verdict.classList.remove('is-changing');
+      }, reduced ? 0 : 180);
+    };
+
+    slider.addEventListener('input', render);
+    render();
+  }
+
   /* --- Footer year ---------------------------------------------------------
      querySelectorAll, not querySelector: there is one per page today, and the
      day someone adds a second the singular version silently leaves it stale. */

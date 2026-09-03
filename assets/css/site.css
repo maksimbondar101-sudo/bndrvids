@@ -807,14 +807,17 @@ html { color-scheme: dark; scrollbar-color: #2A2A2E var(--base); }
 
 /* --- Footer --------------------------------------------------------------- */
 .footer { border-top: 1px solid var(--line); padding-block: var(--gap-block) 40px; }
-.footer__grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: var(--gutter); padding-bottom: var(--gap-block); }
+/* Three columns, not four. The fourth existed to hold a second copy of the
+   Pricing link and a second copy of the Contact link; removing the duplication
+   removed the column with it, and the brand line gets the space back. */
+.footer__grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: var(--gutter); padding-bottom: var(--gap-block); }
 .footer__brand { position: relative; display: inline-block; font-size: var(--t-sm); font-weight: 700; letter-spacing: 0.16em; }
 .footer__brand + p { font-size: var(--t-sm); color: var(--muted); margin-top: var(--gap-element); max-width: 30ch; }
 .footer__h { font-size: var(--t-micro); text-transform: uppercase; letter-spacing: var(--ls-micro); color: var(--muted); font-weight: 500; margin-bottom: var(--gap-element); }
 .footer li + li { margin-top: 10px; }
 .footer li a { font-size: var(--t-sm); color: var(--muted); transition: color 300ms var(--ease); }
 .footer li a:hover { color: var(--text); }
-.footer__base { display: flex; justify-content: space-between; gap: var(--gutter); padding-top: 28px; border-top: 1px solid var(--line); flex-wrap: wrap; }
+.footer__base { display: flex; justify-content: space-between; gap: var(--gutter); padding-top: 24px; border-top: 1px solid var(--line); flex-wrap: wrap; }
 @media (max-width: 860px) {
   .footer__grid { grid-template-columns: 1fr 1fr; row-gap: var(--gap-block); }
   .footer__brand-col { grid-column: 1 / -1; }

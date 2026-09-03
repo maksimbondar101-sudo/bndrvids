@@ -60,29 +60,22 @@
     <div class="container startgrid">
 
       <!-- ── The form ──────────────────────────────────────────────────────
-           Delivers straight to hello@bndrvids.com through FormSubmit, which
+           Delivers straight to bndrvids@gmail.com through FormSubmit, which
            needs no account and no server. site.js posts it to the /ajax
            endpoint so it works on any domain (and on localhost) without the
            absolute _next redirect FormSubmit would otherwise require; the
            plain action below is the no-JavaScript fallback.
 
-           ⚠ ACTIVATION IS PER ADDRESS, AND THIS ADDRESS IS NEW.
-           FormSubmit confirms each recipient separately, so the activation
-           done for the old bndrvids@gmail.com does not carry over. The first
-           submission to this address triggers a fresh confirmation email to
-           hello@bndrvids.com; until someone opens that mailbox and clicks the
-           link, every submission is accepted by the form and delivered
-           nowhere — the visitor still lands on /thanks, so nothing on either
-           side reports the loss.
-
-           Send one test submission and confirm it before this page takes any
-           real traffic. See README, "Making the form work".
+           ⚠ ONE-TIME ACTIVATION: the very first submission makes FormSubmit
+           email bndrvids@gmail.com asking you to confirm the address. Nothing
+           is delivered until you click that link. Do it before you send any
+           traffic here. See README, "Making the form work".
       ───────────────────────────────────────────────────────────────────── -->
       <form class="form reveal"
             name="call-request"
             method="POST"
-            action="https://formsubmit.co/hello@bndrvids.com"
-            data-mail-endpoint="https://formsubmit.co/ajax/hello@bndrvids.com">
+            action="https://formsubmit.co/bndrvids@gmail.com"
+            data-mail-endpoint="https://formsubmit.co/ajax/bndrvids@gmail.com">
 
         <input type="hidden" name="_subject" value="New call request — BNDRVIDS">
         <input type="hidden" name="_template" value="table">
@@ -228,7 +221,7 @@
         </ol>
 
         <div class="startaside__note">
-          <p class="micro">Questions before you book? <a class="textlink" href="mailto:hello@bndrvids.com">hello@bndrvids.com</a></p>
+          <p class="micro">Questions before you book? <a class="textlink" href="mailto:bndrvids@gmail.com">bndrvids@gmail.com</a></p>
         </div>
       </aside>
 

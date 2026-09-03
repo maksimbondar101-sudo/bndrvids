@@ -404,7 +404,7 @@
           if (note) {
             note.hidden = false;
             note.innerHTML = 'That didn’t send. Email <a class="textlink" ' +
-              'href="mailto:bndrvids@gmail.com">bndrvids@gmail.com</a> and we’ll pick it up from there.';
+              'href="mailto:hello@bndrvids.com">hello@bndrvids.com</a> and we’ll pick it up from there.';
           }
         });
     });

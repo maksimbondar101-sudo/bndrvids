@@ -6,6 +6,11 @@
 (function () {
   'use strict';
 
+  /* window.location.search on the real site; the single-page preview build
+     swaps this for its own router state. One accessor, so nothing else has to
+     know which context it is running in. */
+  var PREVIEW_SEARCH = function () { return window.location.search; };
+
   /* --- Nav: solidify on scroll, toggle on mobile -------------------------- */
   var nav = document.querySelector('.nav');
   if (nav) {
@@ -408,6 +413,123 @@
           }
         });
     });
+  }
+
+  /* --- cal.com booker -------------------------------------------------------
+     ┌───────────────────────────────────────────────────────────────────────┐
+     │  SET THIS to your cal.com link and the booker replaces the form on    │
+     │  /start. Leave it as-is and nothing changes — the form keeps working. │
+     │                                                                       │
+     │  Format is the path after cal.com, e.g. 'bndrvids/walkthrough'.       │
+     │  Not a full URL.                                                      │
+     └───────────────────────────────────────────────────────────────────────┘
+
+     Before you set it, open the event type on cal.com and set MINIMUM BOOKING
+     NOTICE. The walkthrough is built before the call, so a slot bookable two
+     hours out is a promise this business cannot keep. Set it to the real
+     turnaround. Everything else on the site depends on that being honest. */
+  var CAL_LINK = '';
+
+  var booking = document.querySelector('[data-cal-embed]');
+  if (booking && CAL_LINK) {
+    var callForm0 = document.querySelector('[data-call-form]');
+    var fallback = document.querySelector('[data-cal-fallback]');
+    var direct = document.querySelector('[data-cal-direct]');
+    var settled = false;
+
+    /* Whatever they pasted into a hero field travels with them. Asking for the
+       listing twice — once to get here, once inside the booker — is the exact
+       friction this whole page exists to remove. */
+    var carried = new URLSearchParams(PREVIEW_SEARCH()).get('listing') || '';
+
+    if (direct) {
+      direct.href = 'https://cal.com/' + CAL_LINK +
+        (carried ? '?listing=' + encodeURIComponent(carried) : '');
+    }
+
+    var giveUp = function () {
+      if (settled) return;
+      settled = true;
+      booking.hidden = true;
+      if (fallback) fallback.hidden = false;
+      /* The form is the safety net, so bring it back rather than leaving the
+         visitor with an apology and no way to act on it. */
+      if (callForm0) callForm0.hidden = false;
+    };
+
+    var succeed = function () {
+      if (settled) return;
+      settled = true;
+      booking.hidden = false;
+      if (callForm0) callForm0.hidden = true;
+      if (fallback) fallback.hidden = true;
+      /* Step 01 promised an email within 1-3 days. It no longer does. */
+      var step = document.querySelector('[data-step-confirm]');
+      if (step) step.innerHTML = '<span>01</span> Your slot is confirmed the moment you book — ' +
+        'calendar invite included, nothing to wait for.';
+    };
+
+    /* Hide the form immediately so the two never flash side by side, but only
+       once we know JS is running and about to try. */
+    if (callForm0) callForm0.hidden = true;
+
+    var script = document.createElement('script');
+    script.src = 'https://app.cal.com/embed/embed.js';
+    script.async = true;
+
+    script.onerror = giveUp;
+    script.onload = function () {
+      try {
+        /* cal.com's own snippet, inlined rather than pasted as an opaque blob
+           so the next person can see what it does. */
+        (function (C, A, L) {
+          var p = function (a, ar) { a.q.push(ar); };
+          var d = C.document;
+          C.Cal = C.Cal || function () {
+            var cal = C.Cal, ar = arguments;
+            if (!cal.loaded) { cal.ns = {}; cal.q = cal.q || []; cal.loaded = true; }
+            if (ar[0] === L) {
+              var api = function () { p(api, arguments); };
+              api.q = api.q || [];
+              cal.ns[ar[1]] = api; p(cal, ar); return;
+            }
+            p(cal, ar);
+          };
+        })(window, 'https://app.cal.com/embed/embed.js', 'init');
+
+        window.Cal('init', { origin: 'https://cal.com' });
+        window.Cal('inline', {
+          elementOrSelector: '#cal-booking',
+          calLink: CAL_LINK,
+          config: carried ? { listing: carried } : {}
+        });
+        /* The site's palette, so the booker does not arrive as a white panel
+           in the middle of a black page. */
+        window.Cal('ui', {
+          theme: 'dark',
+          cssVarsPerTheme: { dark: { 'cal-brand': '#E3A857' } },
+          hideEventTypeDetails: false,
+          layout: 'month_view'
+        });
+        succeed();
+      } catch (e) {
+        giveUp();
+      }
+    };
+
+    /* The failure that actually bites is not onerror — it is the embed script
+       loading fine and never rendering anything: a blocker serving an empty
+       200, cal.com up but wedged, a bad calLink. succeed() runs optimistically
+       the moment the API accepts the call, so this check has to be able to
+       overrule it. Clearing `settled` is what lets it; without that, giveUp()
+       early-returns and the visitor keeps staring at an empty box. */
+    window.setTimeout(function () {
+      if (booking.querySelector('iframe')) return;    /* it rendered — done */
+      settled = false;
+      giveUp();
+    }, 6000);
+
+    document.head.appendChild(script);
   }
 
   /* --- FAQ: animate the close as well as the open --------------------------

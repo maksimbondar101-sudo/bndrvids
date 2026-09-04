@@ -68,6 +68,69 @@ unavoidable; the form endpoint is not.
 
 ---
 
+## Turning on the cal.com booker
+
+`/start` can show a cal.com booking calendar instead of the request form. It is
+built and wired but **switched off**, because it needs your link.
+
+### To switch it on
+
+1. **Set the minimum booking notice on the cal.com event type first.**
+   The walkthrough is built *before* the call. A slot bookable two hours out is
+   a promise this business cannot keep, and the whole site is built on that
+   promise being true. Set it to your real turnaround — 48 hours, 72, whatever
+   is honest. This is not optional.
+2. Add a booking question for the **listing link**, named `listing`, and make it
+   required. `/start` passes a carried listing URL straight into that field, so
+   anyone arriving from a hero form never types it twice.
+3. Add whatever else the form currently collects and you still want: company,
+   units managed, urgency, notes.
+4. In `assets/js/site.js`, set `CAL_LINK` near the top of the booker section:
+
+   ```js
+   var CAL_LINK = 'bndrvids/walkthrough';   // the path after cal.com/, not a URL
+   ```
+
+That is the whole switch. Deploy and `/start` shows the booker.
+
+### What happens automatically
+
+- The request form is hidden. It is not deleted — see below.
+- Step 01 of "What happens next" stops promising a reply in 1–3 business days
+  and says the slot is confirmed on booking, because it now is.
+- The booker is themed to the site's palette (dark, amber brand) rather than
+  arriving as a white panel in a black page.
+
+### The form is the safety net — leave it there
+
+If `CAL_LINK` is unset, or the embed script fails, or a blocker eats it, or
+cal.com is down, the form comes back and `/start` keeps taking bookings. There
+is deliberately no state in which this page cannot capture a lead. A booking
+page that silently shows nothing is the most expensive bug a site like this can
+have.
+
+The loader also handles the failure that `onerror` misses: an embed script that
+loads fine and never renders. If no iframe exists in the container after six
+seconds, it falls back regardless of what the API reported.
+
+### Copy that still needs changing by hand
+
+Turning the booker on makes several lines on **other** pages wrong. Search for
+`1–3 business days` — it appears under CTAs on the homepage, pricing,
+how-it-works, about and in the FormSubmit note on `/start`. Those still describe
+the email path. Fix them in the same commit that sets `CAL_LINK`, or the site
+will promise a three-day wait beside a calendar that just confirmed instantly.
+
+### The CSP consequence
+
+cal.com is the only third party permitted to run on this site, and it took four
+grants in both `netlify.toml` and `_headers`: `script-src` for the embed,
+`frame-src` for the booker, `connect-src` for availability lookups, `img-src`
+for avatars. If a fifth third-party host ever appears in that policy, something
+has been added that should not have been.
+
+---
+
 ## Things marked "see README" in the code
 
 Three places in the markup are waiting on information only you can supply.

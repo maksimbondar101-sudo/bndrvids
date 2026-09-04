@@ -1480,3 +1480,34 @@ html { color-scheme: dark; scrollbar-color: #2A2A2E var(--base); }
   .steps:hover .step { opacity: 1; }
   .listingnote { transition: none; }
 }
+
+
+/* --- The cal.com booker ----------------------------------------------------
+   Sits in the left column of .startgrid, in place of the request form. The
+   iframe is a third party's markup, so almost nothing here styles its inside
+   — that is done through cal.com's own theme API in site.js. What CSS owns is
+   the frame around it and the state where it never arrives.
+  ------------------------------------------------------------------------- */
+.booking { min-width: 0; }
+.cal-embed {
+  /* A booker that has not painted yet must not collapse the grid row and then
+     shove the page down when it does. A month view needs roughly this much. */
+  min-height: 620px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  overflow: hidden;
+}
+.cal-embed iframe { width: 100%; border: 0; display: block; }
+@media (max-width: 900px) { .cal-embed { min-height: 560px; } }
+
+/* The state that matters most: the embed did not load and the visitor still
+   needs a way to reach a human. Amber rather than red — nothing has gone
+   wrong for them, there is just another route. */
+.cal-fallback {
+  border-left: 2px solid var(--accent);
+  background: var(--surface);
+  padding: 14px 18px;
+  font-size: var(--t-sm);
+  color: var(--muted);
+  margin-bottom: var(--gap-block);
+}

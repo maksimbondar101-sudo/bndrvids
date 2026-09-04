@@ -60,7 +60,32 @@
   <section class="section" style="padding-top:0">
     <div class="container startgrid">
 
-      <!-- ── The form ──────────────────────────────────────────────────────
+      <!-- ── Booking ───────────────────────────────────────────────────────
+           Two paths, and only ever one of them on screen.
+
+           When CAL_LINK below is set to a real cal.com link, site.js loads the
+           booker into #cal-booking and hides the form underneath. When it is
+           not — or the embed fails to load, or a blocker eats it — the form
+           stays exactly as it was and keeps working. That fallback is the
+           whole point of the arrangement: a booking page that silently shows
+           nothing is the most expensive bug this site could have, so there is
+           no state in which /start cannot capture a lead.
+
+           ⚠ MINIMUM BOOKING NOTICE. Set this on the cal.com event type before
+           sending anyone here. The walkthrough is built BEFORE the call, so an
+           instant-booking slot two hours out is a promise that cannot be kept.
+           Whatever the real turnaround is — 48h, 72h — that is the number.
+      ───────────────────────────────────────────────────────────────────── -->
+      <div class="booking reveal">
+        <div id="cal-booking" class="cal-embed" data-cal-embed hidden></div>
+        <p class="cal-fallback" data-cal-fallback hidden>
+          The booking calendar didn't load.
+          <a class="textlink" data-cal-direct href="#">Open it in a new tab&nbsp;→</a>
+          or email <a class="textlink" href="mailto:bndrvids@gmail.com">bndrvids@gmail.com</a>.
+        </p>
+      </div>
+
+      <!-- ── The form: fallback, and the only path until cal.com is set ────
            Delivers straight to bndrvids@gmail.com through FormSubmit, which
            needs no account and no server. site.js posts it to the /ajax
            endpoint so it works on any domain (and on localhost) without the
@@ -72,7 +97,7 @@
            is delivered until you click that link. Do it before you send any
            traffic here. See README, "Making the form work".
       ───────────────────────────────────────────────────────────────────── -->
-      <form class="form reveal"
+      <form class="form reveal" data-call-form
             name="call-request"
             method="POST"
             action="https://formsubmit.co/bndrvids@gmail.com"
@@ -215,7 +240,10 @@
       <aside class="startaside reveal" style="--i:1">
         <h2 class="startaside__h">What happens next</h2>
         <ol class="startaside__steps">
-          <li><span>01</span> We confirm a time by email within 1–3 business days.</li>
+          <!-- site.js replaces this line when the cal.com booker is live: the
+               confirmation is then instant, and saying otherwise beside a
+               calendar that just confirmed would read as carelessness. -->
+          <li data-step-confirm><span>01</span> We confirm a time by email within 1–3 business days.</li>
           <li><span>02</span> We pull the photos off your listing and build the walkthrough before we speak — so there's something real to look at, not a pitch deck.</li>
           <li><span>03</span> We play it on the call, show you which photos became which shots, and change anything small while you watch.</li>
           <li><span>04</span> Say yes and the invoice follows; the files land once it clears. Say no and that's genuinely the end of it — no sequence, no chasing.</li>

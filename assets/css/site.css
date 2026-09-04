@@ -313,28 +313,17 @@ html { color-scheme: dark; scrollbar-color: #2A2A2E var(--base); }
 }
 .textlink:hover { color: var(--text); border-color: var(--text); }
 
-/* --- The input row: zero-friction CTA, the site's key interaction ---------- */
-.inputrow { display: flex; gap: 8px; max-width: 540px; }
-.inputrow input {
-  flex: 1;
-  min-width: 0;
-  height: 56px;
-  background: var(--wash);
-  border: 1px solid var(--line-strong);
-  padding-inline: 20px;
-  font-size: var(--t-sm);
-  color: var(--text);
-  transition: border-color 300ms var(--ease), background 300ms var(--ease);
-}
-.inputrow input::placeholder { color: var(--muted); }
-.inputrow input:focus {
-  outline: none;
-  border-color: var(--text);
-  background: rgba(242, 242, 240, 0.07);
-}
-@media (max-width: 560px) {
-  .inputrow { flex-direction: column; }
-  .inputrow .btn { width: 100%; }
+/* --- The CTA row ----------------------------------------------------------
+   Was a listing-link field plus a submit button, on the theory that pasting a
+   URL was a lower-committing first move than clicking through. It was not: the
+   field collected a link only to hand it to cal.com, which now asks for it as
+   a required question on the booking form itself. Two buttons say what happens
+   next without pretending to be a step.
+  ------------------------------------------------------------------------- */
+.ctarow { display: flex; flex-wrap: wrap; gap: 12px; }
+@media (max-width: 480px) {
+  .ctarow { flex-direction: column; align-items: stretch; }
+  .ctarow .btn { width: 100%; }
 }
 
 /* --- Nav ------------------------------------------------------------------ */
@@ -1249,28 +1238,6 @@ html { color-scheme: dark; scrollbar-color: #2A2A2E var(--base); }
 }
 @media (max-width: 620px) { .gauge { padding: 24px; } }
 
-/* --- Listing field: say what you recognised ---------------------------------
-   Someone pastes a URL into a field labelled "Paste a listing link" and gets
-   no acknowledgement that anything landed. The readout below names the portal
-   back to them, which is the cheapest possible proof that the thing on the
-   other end is paying attention.
-  ------------------------------------------------------------------------- */
-.inputrow { position: relative; }
-.listingnote {
-  display: block;
-  font-size: var(--t-micro);
-  letter-spacing: 0.04em;
-  color: var(--muted);
-  margin-top: 10px;
-  min-height: 1.2em;
-  opacity: 0;
-  transform: translateY(-2px);
-  transition: opacity 300ms var(--ease), transform 300ms var(--ease);
-}
-.listingnote.is-shown { opacity: 1; transform: none; }
-.listingnote b { color: var(--text); font-weight: 500; }
-.listingnote.is-warn b { color: var(--accent); }
-
 /* --- FAQ: open and close, rather than jump ---------------------------------
    <details> snaps its panel in at full height, which on a list this long
    throws every question below it down the page mid-read. The panel now has a
@@ -1317,7 +1284,6 @@ html { color-scheme: dark; scrollbar-color: #2A2A2E var(--base); }
   .swap__replay { display: none; }
   .faq .faq__a { transition: none; }
   .steps:hover .step { opacity: 1; }
-  .listingnote { transition: none; }
 }
 
 

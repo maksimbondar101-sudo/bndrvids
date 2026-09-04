@@ -228,35 +228,6 @@
     }
   });
 
-  /* --- Listing link: carry it from any hero/CTA field into /start ---------- */
-  Array.prototype.forEach.call(document.querySelectorAll('[data-listing-form]'), function (form) {
-    form.addEventListener('submit', function (event) {
-      var field = form.querySelector('input[name="listing"]');
-      var value = field ? field.value.trim() : '';
-
-      /* A field of spaces satisfies `required`, so the browser waved it through
-         and the form — which has no action — re-GET'd the current page with
-         ?listing=+++ in the URL. From the visitor's side the button reloaded
-         the page and lost their scroll position. Report it as empty instead. */
-      if (!value) {
-        event.preventDefault();
-        if (field) {
-          field.value = '';
-          field.setCustomValidity('Paste a listing link so we know which property to build.');
-          field.reportValidity();
-          field.addEventListener('input', function clear() {
-            field.setCustomValidity('');
-            field.removeEventListener('input', clear);
-          });
-        }
-        return;
-      }
-
-      event.preventDefault();
-      window.location.href = '/start?listing=' + encodeURIComponent(value);
-    });
-  });
-
   /* --- cal.com booker -------------------------------------------------------
      The path after cal.com — 'bndrvids/30min', not a full URL. This is now the
      only way a call gets booked on this site; the request form it replaced has
@@ -275,14 +246,19 @@
     var direct = document.querySelector('[data-cal-direct]');
     var settled = false;
 
-    /* Whatever they pasted into a hero field travels with them. Asking for the
-       listing twice — once to get here, once inside the booker — is the exact
-       friction this whole page exists to remove. */
+    /* A ?listing= parameter is still honoured if one arrives — an old link, a
+       campaign URL — but nothing on the site produces one any more: the
+       listing is a required question on the cal.com booking form itself.
+       The key is the field's slug on the event type, 'Property-Listing'. A key
+       matching no field is accepted and ignored, so a wrong one fails silently. */
     var carried = new URLSearchParams(PREVIEW_SEARCH()).get('listing') || '';
+    var LISTING_FIELD = 'Property-Listing';
+    var prefill = {};
+    if (carried) prefill[LISTING_FIELD] = carried;
 
-    if (direct) {
+    if (direct && carried) {
       direct.href = 'https://cal.com/' + CAL_LINK +
-        (carried ? '?listing=' + encodeURIComponent(carried) : '');
+        '?' + LISTING_FIELD + '=' + encodeURIComponent(carried);
     }
 
     /* There is no second booking mechanism to fall back to now, so failing
@@ -295,70 +271,67 @@
       if (fallback) fallback.hidden = false;
     };
 
-    var succeed = function () {
-      if (settled) return;
-      settled = true;
-      booking.hidden = false;
-      if (fallback) fallback.hidden = true;
-    };
+    /* cal.com's own loader snippet. The ORDER is the entire fix: this stub has
+       to exist before embed.js runs, because the script drains a queue the stub
+       creates. The previous version appended the script first and defined Cal
+       in its onload — replacing the stub the script had just populated with an
+       empty one, so every queued call was dropped. The script 200s, nothing
+       throws, and no calendar ever appears. That was the bug.
 
-    var script = document.createElement('script');
-    script.src = 'https://app.cal.com/embed/embed.js';
-    script.async = true;
-
-    script.onerror = giveUp;
-    script.onload = function () {
-      try {
-        /* cal.com's own snippet, inlined rather than pasted as an opaque blob
-           so the next person can see what it does. */
-        (function (C, A, L) {
-          var p = function (a, ar) { a.q.push(ar); };
-          var d = C.document;
-          C.Cal = C.Cal || function () {
-            var cal = C.Cal, ar = arguments;
-            if (!cal.loaded) { cal.ns = {}; cal.q = cal.q || []; cal.loaded = true; }
-            if (ar[0] === L) {
-              var api = function () { p(api, arguments); };
-              api.q = api.q || [];
-              cal.ns[ar[1]] = api; p(cal, ar); return;
-            }
+       The stub injects the script itself. Do not also append it. */
+    (function (C, A, L) {
+      var p = function (a, ar) { a.q.push(ar); };
+      var d = C.document;
+      C.Cal = C.Cal || function () {
+        var cal = C.Cal, ar = arguments;
+        if (!cal.loaded) {
+          cal.ns = {};
+          cal.q = cal.q || [];
+          d.head.appendChild(d.createElement('script')).src = A;
+          cal.loaded = true;
+        }
+        if (ar[0] === L) {
+          var api = function () { p(api, arguments); };
+          var namespace = ar[1];
+          api.q = api.q || [];
+          if (typeof namespace === 'string') {
+            cal.ns[namespace] = cal.ns[namespace] || api;
+            p(cal.ns[namespace], ar);
+            p(cal, ['initNamespace', namespace]);
+          } else {
             p(cal, ar);
-          };
-        })(window, 'https://app.cal.com/embed/embed.js', 'init');
+          }
+          return;
+        }
+        p(cal, ar);
+      };
+    })(window, 'https://app.cal.com/embed/embed.js', 'init');
 
-        window.Cal('init', { origin: 'https://cal.com' });
-        window.Cal('inline', {
-          elementOrSelector: '#cal-booking',
-          calLink: CAL_LINK,
-          config: carried ? { listing: carried } : {}
-        });
-        /* The site's palette, so the booker does not arrive as a white panel
-           in the middle of a black page. */
-        window.Cal('ui', {
-          theme: 'dark',
-          cssVarsPerTheme: { dark: { 'cal-brand': '#E3A857' } },
-          hideEventTypeDetails: false,
-          layout: 'month_view'
-        });
-        succeed();
-      } catch (e) {
-        giveUp();
-      }
-    };
+    try {
+      window.Cal('init', { origin: 'https://cal.com' });
+      window.Cal('inline', {
+        elementOrSelector: '#cal-booking',
+        calLink: CAL_LINK,
+        config: prefill
+      });
+      /* Themed to the site, so the booker is not a white panel in a black page. */
+      window.Cal('ui', {
+        theme: 'dark',
+        cssVarsPerTheme: { dark: { 'cal-brand': '#E3A857' } },
+        hideEventTypeDetails: false,
+        layout: 'month_view'
+      });
+    } catch (e) {
+      giveUp();
+    }
 
-    /* The failure that actually bites is not onerror — it is the embed script
-       loading fine and never rendering anything: a blocker serving an empty
-       200, cal.com up but wedged, a bad calLink. succeed() runs optimistically
-       the moment the API accepts the call, so this check has to be able to
-       overrule it. Clearing `settled` is what lets it; without that, giveUp()
-       early-returns and the visitor keeps staring at an empty box. */
+    /* One arbiter, and the only honest one: did an iframe actually appear?
+       A script 200-ing proves nothing — that is precisely what the old version
+       mistook for success. Rendering IS success; there is no succeed(). */
     window.setTimeout(function () {
-      if (booking.querySelector('iframe')) return;    /* it rendered — done */
-      settled = false;
+      if (booking.querySelector('iframe')) return;
       giveUp();
     }, 6000);
-
-    document.head.appendChild(script);
   }
 
   /* --- FAQ: animate the close as well as the open --------------------------
@@ -463,89 +436,6 @@
     var replay = swap.querySelector('[data-swap-replay]');
     if (replay) replay.addEventListener('click', playSwap);
   }
-
-  /* --- Listing field: name the portal back --------------------------------
-     Recognition only — nothing here blocks a submission. Someone pasting a
-     link we do not know still has a working form; they just get "your own
-     site" instead of a brand name. The one case worth flagging is text that
-     is not a link at all, because that is the one that wastes an email. */
-  var PORTALS = [
-    { host: 'zillow.',        name: 'Zillow' },
-    { host: 'apartments.com', name: 'Apartments.com' },
-    { host: 'redfin.',        name: 'Redfin' },
-    { host: 'realtor.com',    name: 'Realtor.com' },
-    { host: 'trulia.',        name: 'Trulia' },
-    { host: 'rent.com',       name: 'Rent.com' },
-    { host: 'hotpads.',       name: 'HotPads' },
-    { host: 'streeteasy.',    name: 'StreetEasy' },
-    { host: 'padmapper.',     name: 'PadMapper' },
-    { host: 'zumper.',        name: 'Zumper' },
-    { host: 'loopnet.',       name: 'LoopNet' },
-    { host: 'costar.',        name: 'CoStar' },
-    { host: 'drive.google.',  name: 'Google Drive', folder: true },
-    { host: 'photos.google.', name: 'Google Photos', folder: true },
-    { host: 'dropbox.',       name: 'Dropbox', folder: true },
-    { host: 'onedrive.',      name: 'OneDrive', folder: true },
-    { host: '1drv.ms',        name: 'OneDrive', folder: true },
-    { host: 'icloud.',        name: 'iCloud', folder: true },
-    { host: 'wetransfer.',    name: 'WeTransfer', folder: true },
-    { host: 'box.com',        name: 'Box', folder: true }
-  ];
-
-  var describeListing = function (value) {
-    var v = value.trim();
-    if (!v) return null;
-
-    var host = '';
-    try {
-      /* Most people paste without a scheme. Adding one is what makes URL()
-         usable here instead of a regex that has to re-learn hostnames. */
-      host = new URL(/^[a-z][a-z0-9+.-]*:\/\//i.test(v) ? v : 'https://' + v).hostname.toLowerCase();
-    } catch (e) {
-      host = '';
-    }
-
-    /* No dot in the host means it is not a domain — it is a sentence, an
-       address, or a unit number. That is the only case worth correcting. */
-    if (!host || host.indexOf('.') === -1) {
-      return { warn: true, html: 'That doesn\u2019t look like a link. Paste the listing URL, or a link to a folder of photos.' };
-    }
-
-    for (var i = 0; i < PORTALS.length; i++) {
-      if (host.indexOf(PORTALS[i].host) !== -1) {
-        return PORTALS[i].folder
-          ? { html: '<b>' + PORTALS[i].name + '</b> \u2014 we\u2019ll pull the photos from the folder.' }
-          : { html: '<b>' + PORTALS[i].name + '</b> listing \u2014 we\u2019ll pull the photos from it.' };
-      }
-    }
-    return { html: '<b>' + host.replace(/^www\./, '') + '</b> \u2014 we\u2019ll pull the photos from it.' };
-  };
-
-  Array.prototype.forEach.call(document.querySelectorAll('[data-listing-form]'), function (form) {
-    var field = form.querySelector('input[name="listing"]');
-    if (!field) return;
-
-    var note = document.createElement('span');
-    note.className = 'listingnote';
-    note.setAttribute('aria-live', 'polite');
-    form.appendChild(note);
-
-    var update = function () {
-      var result = describeListing(field.value);
-      if (!result) {
-        note.classList.remove('is-shown', 'is-warn');
-        note.innerHTML = '';
-        return;
-      }
-      note.innerHTML = result.html;
-      note.classList.toggle('is-warn', !!result.warn);
-      note.classList.add('is-shown');
-    };
-
-    field.addEventListener('input', update);
-    field.addEventListener('paste', function () { window.setTimeout(update, 0); });
-    if (field.value) update();
-  });
 
   /* --- Photo gauge ----------------------------------------------------------
      Bands and copy are the requirements table on /how-it-works, unchanged —

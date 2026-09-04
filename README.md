@@ -61,9 +61,9 @@ cal.com and they are the difference between the booker helping and hurting.
 
 | Setting | Why |
 |---|---|
-| **Minimum notice: 48 hours** | The walkthrough is built *before* the call. A slot bookable two hours out is a promise this business cannot keep, and the whole site rests on that promise being true. **Verify this is set.** |
-| **Booking question `listing`, required** | `/start` passes a carried listing URL straight into a field of that name, so anyone arriving from a hero form never types it twice. Without the question, the prefill has nowhere to land and they are asked again. |
-| Company, units managed, notes | Optional. The request form collected these; add them as booking questions if you still want them. |
+| **Minimum notice: 48 hours** | The walkthrough is built *before* the call. A slot bookable two hours out is a promise this business cannot keep. Verified set: `minimumBookingNotice: 2880`. |
+| **Booking question `Property-Listing`, required** | Verified present on the event type. This is the slug the prefill targets — the site no longer collects a listing itself, so this field is now the only place it is asked for. A prefill key matching no field is accepted and silently ignored, which is why the slug has to match exactly. |
+| Company, units managed, notes | Optional. The old request form collected these; add them as booking questions if you still want them. |
 
 ### Failure handling
 

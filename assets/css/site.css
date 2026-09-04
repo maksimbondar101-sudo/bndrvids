@@ -224,6 +224,20 @@ html { color-scheme: dark; scrollbar-color: #2A2A2E var(--base); }
 }
 
 .section { padding-block: var(--gap-section); }
+/* Every section padded 96 top AND bottom, so each boundary was 192px of empty
+   — a fifth of the viewport, three times over on the homepage, which reads as
+   the page losing its thread rather than as breathing room. Adjacent sections
+   now share one gap instead of stacking two.
+
+   Sections that paint a background are the exception: their padding sits
+   inside the colour, so it has to stay, and whatever follows one needs its own
+   top padding to clear the band. Same specificity as the rule above, declared
+   after, so these win. */
+.section + .section { padding-top: 0; }
+.section.section--surface,
+.section.band,
+.section--surface + .section,
+.band + .section { padding-top: var(--gap-section); }
 .section--tight { padding-block: calc(var(--gap-section) * 0.55); }
 .section--surface { background: var(--surface); }
 .section--hairline { border-top: 1px solid var(--line); }
@@ -250,6 +264,11 @@ html { color-scheme: dark; scrollbar-color: #2A2A2E var(--base); }
 .section__head .eyebrow { grid-column: 1 / -1; margin-bottom: 0; }
 .section__head h2 { max-width: 22ch; }
 .section__head p { color: var(--muted); margin-top: 0; padding-bottom: 4px; }
+/* A head with no supporting paragraph would otherwise sit in the 7fr column
+   with a dead 5fr column beside it — a headline pinned left of a hole. When
+   the h2 is the last child there is nothing to sit alongside, so it takes the
+   full width and its own max-width does the measuring. */
+.section__head > h2:last-child { grid-column: 1 / -1; }
 @media (max-width: 860px) {
   .section__head { grid-template-columns: 1fr; }
   .section__head h2 { max-width: none; }
@@ -442,6 +461,12 @@ html { color-scheme: dark; scrollbar-color: #2A2A2E var(--base); }
   padding-block: 140px 120px;
   overflow: hidden;
 }
+/* On a phone, 86svh of centred content left roughly 570px of empty above and
+   below three short lines — the first screen was mostly nothing, and the proof
+   bar sat well past the fold. Let the content set the height instead. */
+@media (max-width: 620px) {
+  .hero { min-height: 0; padding-block: 128px 88px; }
+}
 /* Specificity matters here: .hero__bg also carries .media, and `.media
    { position: relative }` is declared later in this file. At equal specificity
    the later rule wins, which turned this into a relatively-positioned box with
@@ -457,11 +482,23 @@ html { color-scheme: dark; scrollbar-color: #2A2A2E var(--base); }
   position: absolute;
   inset: 0;
   z-index: 1;
-  background: linear-gradient(to top, var(--base) 0%, rgba(10,10,11,0.86) 22%, rgba(10,10,11,0.45) 55%, rgba(10,10,11,0.25) 100%);
+  /* Weighted to where the copy actually sits rather than evenly. The previous
+     midpoint of 0.45 left the sub-headline — muted grey — competing with the
+     brightest streaks in the poster, worst on a phone where the image fills
+     more of the frame per line of text. The top stays light so the frame is
+     still visible and the hero doesn't read as the void it used to. */
+  background: linear-gradient(to top,
+    var(--base) 0%,
+    rgba(10,10,11,0.92) 26%,
+    rgba(10,10,11,0.66) 58%,
+    rgba(10,10,11,0.28) 100%);
 }
 .hero__inner { position: relative; z-index: 2; width: 100%; }
 .hero h1 { max-width: 16ch; }
-.hero__sub { margin-top: var(--gap-element); max-width: 46ch; color: var(--muted); }
+/* Not --muted. That grey is calibrated against flat --base, and this is the
+   one block of copy on the site sitting on a photograph. It gets the weight
+   the background costs it. */
+.hero__sub { margin-top: var(--gap-element); max-width: 46ch; color: rgba(242, 242, 240, 0.80); }
 .hero__cta { margin-top: var(--gap-block); }
 .hero__micro { margin-top: var(--gap-element); }
 
@@ -621,7 +658,12 @@ html { color-scheme: dark; scrollbar-color: #2A2A2E var(--base); }
 }
 .section--centered .section__head h2 { max-width: 24ch; }
 .section--centered .section__head p { padding-bottom: 0; }
-.section--centered .textlink-wrap { text-align: center; }
+/* margin-inline as well as text-align, for the same reason as .finale .micro:
+   the global `p { max-width: 68ch }` shrinks these below their column, so
+   centring the text inside a box that is itself sitting left just moves the
+   problem. Any <p> in a centred context needs its box centred too. */
+.section--centered .textlink-wrap,
+.section--centered .section__head p { text-align: center; margin-inline: auto; }
 /* Both tiers carry an identical treatment — same surface, same border, same
    amber rule, same button. There is no "featured" variant: singling one out
    made the pair read as an upsell rather than as a choice between two things.
@@ -788,11 +830,17 @@ html { color-scheme: dark; scrollbar-color: #2A2A2E var(--base); }
 .faq__a p { font-size: var(--t-sm); color: var(--muted); }
 .faq__a p + p { margin-top: 12px; }
 
-/* --- Final CTA: the one centered element on the entire site ---------------- */
+/* --- Final CTA: the one centered element on the entire site ----------------
+   text-align centres text. It does not centre a flex row's children, and it
+   does not centre a block that is narrower than its parent — and the global
+   `p { max-width: 68ch }` makes this paragraph exactly that: at 12px, 68ch is
+   549px inside a 1176px column, so its text was centring within its own box
+   and landing 313px left of the headline above it. Both need saying outright.
+  ------------------------------------------------------------------------- */
 .finale { text-align: center; }
 .finale .display { max-width: 18ch; margin-inline: auto; }
-.finale .inputrow { margin-inline: auto; margin-top: var(--gap-block); }
-.finale .micro { margin-top: var(--gap-element); }
+.finale .ctarow { justify-content: center; margin-top: var(--gap-block); }
+.finale .micro { margin-top: var(--gap-element); margin-inline: auto; }
 
 /* --- Footer --------------------------------------------------------------- */
 .footer { border-top: 1px solid var(--line); padding-block: var(--gap-block) 40px; }

@@ -68,30 +68,27 @@ unavoidable; the form endpoint is not.
 
 ---
 
-## Turning on the cal.com booker
+## The cal.com booker
 
-`/start` can show a cal.com booking calendar instead of the request form. It is
-built and wired but **switched off**, because it needs your link.
+`/start` shows the cal.com booking calendar at **cal.com/bndrvids/30min**
+instead of the request form. It is **live**.
 
-### To switch it on
+```js
+var CAL_LINK = 'bndrvids/30min';   // assets/js/site.js — path after cal.com/, not a URL
+```
 
-1. **Set the minimum booking notice on the cal.com event type first.**
-   The walkthrough is built *before* the call. A slot bookable two hours out is
-   a promise this business cannot keep, and the whole site is built on that
-   promise being true. Set it to your real turnaround — 48 hours, 72, whatever
-   is honest. This is not optional.
-2. Add a booking question for the **listing link**, named `listing`, and make it
-   required. `/start` passes a carried listing URL straight into that field, so
-   anyone arriving from a hero form never types it twice.
-3. Add whatever else the form currently collects and you still want: company,
-   units managed, urgency, notes.
-4. In `assets/js/site.js`, set `CAL_LINK` near the top of the booker section:
+Set that to `''` to turn it off; the request form comes straight back.
 
-   ```js
-   var CAL_LINK = 'bndrvids/walkthrough';   // the path after cal.com/, not a URL
-   ```
+### Settings that live in cal.com, not in this repo
 
-That is the whole switch. Deploy and `/start` shows the booker.
+Nothing in this codebase can enforce these. They are set on the event type at
+cal.com and they are the difference between the booker helping and hurting.
+
+| Setting | Why |
+|---|---|
+| **Minimum notice: 48 hours** | The walkthrough is built *before* the call. A slot bookable two hours out is a promise this business cannot keep, and the whole site rests on that promise being true. **Verify this is set.** |
+| **Booking question `listing`, required** | `/start` passes a carried listing URL straight into a field of that name, so anyone arriving from a hero form never types it twice. Without the question, the prefill has nowhere to land and they are asked again. |
+| Company, units managed, notes | Optional. The request form collected these; add them as booking questions if you still want them. |
 
 ### What happens automatically
 
@@ -113,13 +110,18 @@ The loader also handles the failure that `onerror` misses: an embed script that
 loads fine and never renders. If no iframe exists in the container after six
 seconds, it falls back regardless of what the API reported.
 
-### Copy that still needs changing by hand
+### Where "1–3 business days" still appears, and why
 
-Turning the booker on makes several lines on **other** pages wrong. Search for
-`1–3 business days` — it appears under CTAs on the homepage, pricing,
-how-it-works, about and in the FormSubmit note on `/start`. Those still describe
-the email path. Fix them in the same commit that sets `CAL_LINK`, or the site
-will promise a three-day wait beside a calendar that just confirmed instantly.
+The four CTA lines that fed into `/start` now read "Pick a time in under a
+minute", because that is what happens there. Four mentions remain and each one
+is still true on the path that shows it:
+
+- `contact.html` aside — emailing you really does take 1–3 days.
+- `start.html` form note — only visible when the fallback form is showing.
+- `start.html` aside step 01 — `site.js` rewrites it when the booker loads.
+- `thanks.html` headline — only reachable through the fallback form.
+
+If you ever set `CAL_LINK` back to `''`, revert the four CTA lines with it.
 
 ### The CSP consequence
 

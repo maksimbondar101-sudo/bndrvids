@@ -428,7 +428,7 @@
      NOTICE. The walkthrough is built before the call, so a slot bookable two
      hours out is a promise this business cannot keep. Set it to the real
      turnaround. Everything else on the site depends on that being honest. */
-  var CAL_LINK = '';
+  var CAL_LINK = 'bndrvids/30min';
 
   var booking = document.querySelector('[data-cal-embed]');
   if (booking && CAL_LINK) {

@@ -1,7 +1,7 @@
 User-agent: *
 Allow: /
 
-# /start and /thanks carry <meta name="robots" content="noindex"> instead of a
+# /start carries <meta name="robots" content="noindex"> instead of a
 # Disallow. A Disallow blocks the crawl, not the index — so a crawler that is
 # told to stay out never reads the noindex, and a URL every page on this site
 # links to can still surface in results as a bare link with no title. Letting

@@ -257,182 +257,20 @@
     });
   });
 
-  /* Prefill the request form when arriving from a hero field. */
-  var target = document.querySelector('#listing-field');
-  if (target) {
-    var passed = new URLSearchParams(window.location.search).get('listing');
-    if (passed) {
-      target.value = passed;
-      /* Name, not email — it is the next empty field in the form. Landing the
-         cursor on Email meant shift-tabbing back to fill the field above it. */
-      var next = document.querySelector('#name-field');
-      if (next) next.focus();
-    }
-  }
-
-  /* --- Call request: post to the mail service, then show the thank-you ------
-     Posting via fetch rather than a normal form POST means no absolute _next
-     redirect is needed, so the same markup works on localhost and on whatever
-     domain this ends up on. If anything fails the visitor gets the address to
-     email instead of a dead end — a silently broken form is the most expensive
-     bug a small site can have.
-    ----------------------------------------------------------------------- */
-  var callForm = document.querySelector('form[data-mail-endpoint]');
-  if (callForm && window.fetch) {
-    var submitBtn = callForm.querySelector('[type="submit"]');
-    var btnLabel = submitBtn ? submitBtn.textContent : '';
-
-    /* A checkbox group can't be `required` natively, so validate it here.
-       Clear the warning the moment they pick something. */
-    var chipGroups = callForm.querySelectorAll('[data-chip-group]');
-    var chipsChosen = function () {
-      var ok = true;
-      Array.prototype.forEach.call(chipGroups, function (group) {
-        var picked = !!group.querySelector('input:checked');
-        group.classList.toggle('is-invalid', !picked);
-        if (!picked) ok = false;
-      });
-      return ok;
-    };
-
-    Array.prototype.forEach.call(chipGroups, function (group) {
-      group.addEventListener('change', function () {
-        if (group.querySelector('input:checked')) group.classList.remove('is-invalid');
-        /* Drop the warning as soon as every group has an answer. */
-        var inline = callForm.querySelector('[data-chip-note]');
-        if (!inline || inline.hidden) return;
-        var allAnswered = true;
-        Array.prototype.forEach.call(chipGroups, function (g) {
-          if (!g.querySelector('input:checked')) allAnswered = false;
-        });
-        if (allAnswered) inline.hidden = true;
-      });
-    });
-
-    /* Weekend calls are mornings only. Rule out the later slots when the choice
-       is weekend-ONLY — if a weekday is also ticked, the afternoon genuinely is
-       available on that weekday, so leave it alone. */
-    var dayGroup = callForm.querySelector('[data-chip-group="days"]');
-    var timeGroup = callForm.querySelector('[data-chip-group="times"]');
-    var weekendNote = callForm.querySelector('[data-weekend-note]');
-
-    if (dayGroup && timeGroup) {
-      var syncWeekend = function () {
-        var weekend = false, weekday = false;
-        Array.prototype.forEach.call(dayGroup.querySelectorAll('input:checked'), function (input) {
-          if (input.hasAttribute('data-weekend')) weekend = true; else weekday = true;
-        });
-        var restrict = weekend && !weekday;
-
-        Array.prototype.forEach.call(timeGroup.querySelectorAll('input'), function (input) {
-          if (input.hasAttribute('data-weekend-ok')) return;
-          input.disabled = restrict;
-          /* Clear anything already picked that just became unavailable, so a
-             ruled-out slot can never end up in the submission. */
-          if (restrict && input.checked) input.checked = false;
-        });
-
-        if (weekendNote) weekendNote.hidden = !restrict;
-        /* Unchecking may have emptied the group — re-flag it if it was already
-           being warned about, but never warn before they have tried to submit. */
-        if (restrict && timeGroup.classList.contains('is-invalid') && timeGroup.querySelector('input:checked')) {
-          timeGroup.classList.remove('is-invalid');
-        }
-      };
-
-      dayGroup.addEventListener('change', syncWeekend);
-      syncWeekend();
-    }
-
-    callForm.addEventListener('submit', function (event) {
-      /* Native validation first. Checking chips first meant someone who left
-         both the listing link and the chips empty was told about the chips,
-         fixed them, submitted again, and only then heard about the link —
-         two rounds to discover two problems that were visible at once. */
-      if (!callForm.checkValidity()) return;      /* let the browser complain */
-
-      if (chipGroups.length && !chipsChosen()) {
-        event.preventDefault();
-        var firstEmpty = null;
-        Array.prototype.forEach.call(chipGroups, function (group) {
-          if (!firstEmpty && !group.querySelector('input:checked')) firstEmpty = group;
-        });
-        var anchor = firstEmpty || chipGroups[0];
-
-        /* The note lives beside the submit button, ~790px below the chips.
-           Scrolling to the chips put the only explanation of what went wrong
-           well below the fold, so the form just appeared to do nothing. Put the
-           message where the eye is being sent. */
-        var inline = callForm.querySelector('[data-chip-note]');
-        if (inline) {
-          inline.hidden = false;
-          inline.textContent = 'Pick at least one day and one time that work for you.';
-        }
-        var note0 = callForm.querySelector('[data-form-note]');
-        if (note0) { note0.hidden = true; note0.textContent = ''; }
-
-        anchor.scrollIntoView({ block: 'center', behavior: 'smooth' });
-        var firstChip = anchor.querySelector('input:not(:disabled)');
-        if (firstChip) firstChip.focus({ preventScroll: true });
-        return;
-      }
-
-      event.preventDefault();
-
-      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Sending…'; }
-
-      var note = callForm.querySelector('[data-form-note]');
-      if (note) { note.textContent = ''; note.hidden = true; }
-
-      /* The day and time chips share a name each so they can multi-select, which
-         puts repeated keys in the payload. Whether the mail service renders all
-         of them or keeps only the last is its business, not something to bet a
-         booking on — someone picking Mon/Wed/Fri could arrive as just "Friday"
-         and you'd schedule the wrong call without ever knowing values were
-         dropped. Collapse each group into one readable field before sending. */
-      var payload = new FormData(callForm);
-      ['days', 'times'].forEach(function (key) {
-        var picked = payload.getAll(key);
-        payload.delete(key);
-        payload.set(key, picked.length ? picked.join(', ') : '—');
-      });
-
-      fetch(callForm.getAttribute('data-mail-endpoint'), {
-        method: 'POST',
-        headers: { 'Accept': 'application/json' },
-        body: payload
-      })
-        .then(function (res) { if (!res.ok) throw new Error(res.status); return res.json(); })
-        .then(function () { window.location.href = '/thanks'; })
-        .catch(function () {
-          if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = btnLabel; }
-          if (note) {
-            note.hidden = false;
-            note.innerHTML = 'That didn’t send. Email <a class="textlink" ' +
-              'href="mailto:bndrvids@gmail.com">bndrvids@gmail.com</a> and we’ll pick it up from there.';
-          }
-        });
-    });
-  }
-
   /* --- cal.com booker -------------------------------------------------------
-     ┌───────────────────────────────────────────────────────────────────────┐
-     │  SET THIS to your cal.com link and the booker replaces the form on    │
-     │  /start. Leave it as-is and nothing changes — the form keeps working. │
-     │                                                                       │
-     │  Format is the path after cal.com, e.g. 'bndrvids/walkthrough'.       │
-     │  Not a full URL.                                                      │
-     └───────────────────────────────────────────────────────────────────────┘
+     The path after cal.com — 'bndrvids/30min', not a full URL. This is now the
+     only way a call gets booked on this site; the request form it replaced has
+     been removed, so emptying this string leaves /start with nothing but the
+     fallback link.
 
-     Before you set it, open the event type on cal.com and set MINIMUM BOOKING
-     NOTICE. The walkthrough is built before the call, so a slot bookable two
-     hours out is a promise this business cannot keep. Set it to the real
-     turnaround. Everything else on the site depends on that being honest. */
+     Two settings on the cal.com event type carry weight nothing here can
+     enforce: MINIMUM NOTICE, which must cover the time it takes to build a
+     walkthrough before the call, and a required booking question named
+     `listing`, which is where the carried URL below lands. See README. */
   var CAL_LINK = 'bndrvids/30min';
 
   var booking = document.querySelector('[data-cal-embed]');
   if (booking && CAL_LINK) {
-    var callForm0 = document.querySelector('[data-call-form]');
     var fallback = document.querySelector('[data-cal-fallback]');
     var direct = document.querySelector('[data-cal-direct]');
     var settled = false;
@@ -447,31 +285,22 @@
         (carried ? '?listing=' + encodeURIComponent(carried) : '');
     }
 
+    /* There is no second booking mechanism to fall back to now, so failing
+       means handing over the same calendar as a link. Its href is in the
+       markup, so it works even with JavaScript off entirely. */
     var giveUp = function () {
       if (settled) return;
       settled = true;
       booking.hidden = true;
       if (fallback) fallback.hidden = false;
-      /* The form is the safety net, so bring it back rather than leaving the
-         visitor with an apology and no way to act on it. */
-      if (callForm0) callForm0.hidden = false;
     };
 
     var succeed = function () {
       if (settled) return;
       settled = true;
       booking.hidden = false;
-      if (callForm0) callForm0.hidden = true;
       if (fallback) fallback.hidden = true;
-      /* Step 01 promised an email within 1-3 days. It no longer does. */
-      var step = document.querySelector('[data-step-confirm]');
-      if (step) step.innerHTML = '<span>01</span> Your slot is confirmed the moment you book — ' +
-        'calendar invite included, nothing to wait for.';
     };
-
-    /* Hide the form immediately so the two never flash side by side, but only
-       once we know JS is running and about to try. */
-    if (callForm0) callForm0.hidden = true;
 
     var script = document.createElement('script');
     script.src = 'https://app.cal.com/embed/embed.js';

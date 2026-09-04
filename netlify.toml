@@ -47,7 +47,7 @@
     # render the booker, connect-src for its availability lookups, and img-src
     # for avatars. Nothing else third-party belongs in this policy — if a fifth
     # host ever appears here, something has been added that should not have been.
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://app.cal.com; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https://cal.com https://app.cal.com; media-src 'self'; object-src 'none'; connect-src 'self' https://formsubmit.co https://app.cal.com https://api.cal.com; frame-src https://cal.com https://app.cal.com; form-action 'self' https://formsubmit.co; frame-ancestors 'none'; base-uri 'self'"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://app.cal.com; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https://cal.com https://app.cal.com; media-src 'self'; object-src 'none'; connect-src 'self' https://app.cal.com https://api.cal.com; frame-src https://cal.com https://app.cal.com; form-action 'self'; frame-ancestors 'none'; base-uri 'self'"
 
 # Fonts are content-addressed by filename: a different cut gets a different
 # name, so a year of immutable caching can never strand anyone on a stale one.

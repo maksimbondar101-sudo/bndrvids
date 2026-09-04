@@ -31,53 +31,28 @@ To deploy without Git at all, drag a zip of this directory onto the same page;
 
 ---
 
-## Making the form work
+## Booking
 
-**This is the one thing that can break silently, and the failure is invisible
-from both ends.**
-
-`start.html` posts to FormSubmit, which needs no account and no server. But
-FormSubmit will not deliver to an address until that address has been
-confirmed **once**, and confirmation is per recipient — changing the address
-means confirming the new one from scratch.
-
-Until that is done:
-
-- the form accepts the submission,
-- the visitor sees "Sending…" and lands on `/thanks`,
-- and the message is delivered nowhere.
-
-Nothing errors. Nothing is logged. The lead is simply gone.
-
-**To confirm:** submit the form yourself once with a junk listing link.
-FormSubmit emails `bndrvids@gmail.com` asking you to confirm. Click the link,
-submit a second time, and check it arrives. Do this before sending traffic to
-`/start`, and again any time the address changes.
-
-The address currently lives in four places — `action`, `data-mail-endpoint`,
-and two `mailto:` links in `start.html` — plus the `mailto:` links on the other
-pages and the failure-path message in `site.js`. Grep for it rather than
-editing by hand.
-
-### Worth doing
-
-FormSubmit offers a hashed endpoint (`formsubmit.co/ajax/<hash>`) so the email
-address is not sitting in the page source for scrapers. Generate one from the
-FormSubmit dashboard and swap it into both attributes. The `mailto:` links are
-unavoidable; the form endpoint is not.
-
----
-
-## The cal.com booker
-
-`/start` shows the cal.com booking calendar at **cal.com/bndrvids/30min**
-instead of the request form. It is **live**.
+Every "Schedule a call" on this site leads to `/start`, and `/start` is the
+cal.com booker at **cal.com/bndrvids/30min**. That is the only way a call gets
+scheduled. There is no second path.
 
 ```js
 var CAL_LINK = 'bndrvids/30min';   // assets/js/site.js — path after cal.com/, not a URL
 ```
 
-Set that to `''` to turn it off; the request form comes straight back.
+### What was removed, and what replaced it
+
+The FormSubmit request form, its day/time chips, the hand-rolled weekend
+interlock, the separate timezone question, and `/thanks` (which existed only as
+that form's confirmation page) are all gone — about 170 lines of JavaScript and
+160 of CSS with them. FormSubmit is no longer contacted at all, so it has been
+dropped from the CSP: `connect-src` and `form-action` no longer name it.
+
+If the embed fails to load, the fallback is **a link to the same calendar**,
+not a second booking mechanism. Its `href` is in the markup, so it works with
+JavaScript switched off entirely. One place a call gets booked, and no path
+that dead-ends.
 
 ### Settings that live in cal.com, not in this repo
 
@@ -90,38 +65,25 @@ cal.com and they are the difference between the booker helping and hurting.
 | **Booking question `listing`, required** | `/start` passes a carried listing URL straight into a field of that name, so anyone arriving from a hero form never types it twice. Without the question, the prefill has nowhere to land and they are asked again. |
 | Company, units managed, notes | Optional. The request form collected these; add them as booking questions if you still want them. |
 
-### What happens automatically
+### Failure handling
 
-- The request form is hidden. It is not deleted — see below.
-- Step 01 of "What happens next" stops promising a reply in 1–3 business days
-  and says the slot is confirmed on booking, because it now is.
-- The booker is themed to the site's palette (dark, amber brand) rather than
-  arriving as a white panel in a black page.
+`onerror` is not the failure that matters. The one that does is an embed script
+loading fine and rendering nothing — a blocker serving an empty 200, a wedged
+service, a wrong `calLink`. The loader accepts success optimistically the moment
+the API takes the call, so a six-second check looks for an actual `<iframe>` in
+the container and falls back regardless of what the API reported.
 
-### The form is the safety net — leave it there
+### Call length
 
-If `CAL_LINK` is unset, or the embed script fails, or a blocker eats it, or
-cal.com is down, the form comes back and `/start` keeps taking bookings. There
-is deliberately no state in which this page cannot capture a lead. A booking
-page that silently shows nothing is the most expensive bug a site like this can
-have.
+Thirty minutes, stated on `/start` (lede, step 03, meta description) and in step
+03 of `/how-it-works`. If you change the cal.com event length, change those four
+places with it.
 
-The loader also handles the failure that `onerror` misses: an embed script that
-loads fine and never renders. If no iframe exists in the container after six
-seconds, it falls back regardless of what the API reported.
+### "1–3 business days" — where it survives, and why
 
-### Where "1–3 business days" still appears, and why
-
-The four CTA lines that fed into `/start` now read "Pick a time in under a
-minute", because that is what happens there. Four mentions remain and each one
-is still true on the path that shows it:
-
-- `contact.html` aside — emailing you really does take 1–3 days.
-- `start.html` form note — only visible when the fallback form is showing.
-- `start.html` aside step 01 — `site.js` rewrites it when the booker loads.
-- `thanks.html` headline — only reachable through the fallback form.
-
-If you ever set `CAL_LINK` back to `''`, revert the four CTA lines with it.
+CTA lines now say "pick a time in under a minute", which is what happens. One
+mention remains, in the `contact.html` aside, and it is still true: emailing you
+really does take that long. Booking does not.
 
 ### The CSP consequence
 

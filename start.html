@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script>document.documentElement.classList.add('js')</script>
 <title>Schedule a call — BNDRVIDS</title>
-<meta name="description" content="Send a listing link and pick a time. We build the walkthrough before we speak and walk you through it on the call. Free, no commitment.">
+<meta name="description" content="Book a 30-minute call. We build the walkthrough from your listing before we speak and take you through it live. Free, no commitment.">
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#0A0A0B">
 <link rel="preload" href="assets/fonts/DMSans.woff2" as="font" type="font/woff2" crossorigin>
@@ -13,7 +13,7 @@
 <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
 <meta property="og:title" content="Schedule a call — BNDRVIDS">
-<meta property="og:description" content="Send a listing link and pick a time. We build the walkthrough before we speak and walk you through it on the call. Free, no commitment.">
+<meta property="og:description" content="Book a 30-minute call. We build the walkthrough from your listing before we speak and take you through it live. Free, no commitment.">
 <meta property="og:type" content="website">
 <meta property="og:image" content="https://bndrvids.com/assets/img/og-image.jpg">
 <meta property="og:image:width" content="1200">
@@ -52,8 +52,9 @@
     <span class="eyebrow reveal">Schedule a call</span>
     <h1 class="reveal" style="--i:1">Book a call. See your listing as a video.</h1>
     <p class="lede reveal" style="--i:2">
-      Send us the listing and pick a time. We'll have the walkthrough built before
-      we speak, and we'll walk you through it live. Free, and no commitment after.
+      Pick a slot below — thirty minutes, confirmed instantly. We'll have the
+      walkthrough built from your listing before we speak, and we'll take you
+      through it live. Free, and no commitment after.
     </p>
   </section>
 
@@ -61,191 +62,38 @@
     <div class="container startgrid">
 
       <!-- ── Booking ───────────────────────────────────────────────────────
-           Two paths, and only ever one of them on screen.
+           The cal.com booker is the only way to book a call. The request form
+           that used to live here — FormSubmit, day/time chips, a hand-rolled
+           weekend interlock and a separate timezone question — is gone, along
+           with /thanks, which only existed as its confirmation page.
 
-           When CAL_LINK below is set to a real cal.com link, site.js loads the
-           booker into #cal-booking and hides the form underneath. When it is
-           not — or the embed fails to load, or a blocker eats it — the form
-           stays exactly as it was and keeps working. That fallback is the
-           whole point of the arrangement: a booking page that silently shows
-           nothing is the most expensive bug this site could have, so there is
-           no state in which /start cannot capture a lead.
+           If the embed cannot load, the fallback below is a link to the same
+           calendar rather than a second booking mechanism. One place where a
+           call gets scheduled, and no path that dead-ends.
 
-           ⚠ MINIMUM BOOKING NOTICE. Set this on the cal.com event type before
-           sending anyone here. The walkthrough is built BEFORE the call, so an
-           instant-booking slot two hours out is a promise that cannot be kept.
-           Whatever the real turnaround is — 48h, 72h — that is the number.
+           ⚠ Two settings on the cal.com event type carry weight this markup
+           cannot enforce: MINIMUM NOTICE (48h — the walkthrough is built
+           before the call) and a required booking question named `listing`,
+           which is where the carried listing URL below lands. See README.
       ───────────────────────────────────────────────────────────────────── -->
       <div class="booking reveal">
-        <div id="cal-booking" class="cal-embed" data-cal-embed hidden></div>
+        <div id="cal-booking" class="cal-embed" data-cal-embed></div>
         <p class="cal-fallback" data-cal-fallback hidden>
-          The booking calendar didn't load.
-          <a class="textlink" data-cal-direct href="#">Open it in a new tab&nbsp;→</a>
-          or email <a class="textlink" href="mailto:bndrvids@gmail.com">bndrvids@gmail.com</a>.
+          The calendar didn't load — an extension or a network block will do
+          that. <a class="textlink" data-cal-direct href="https://cal.com/bndrvids/30min">Open it
+          in a new tab&nbsp;→</a> or email
+          <a class="textlink" href="mailto:bndrvids@gmail.com">bndrvids@gmail.com</a>
+          and we'll set it up by hand.
         </p>
       </div>
-
-      <!-- ── The form: fallback, and the only path until cal.com is set ────
-           Delivers straight to bndrvids@gmail.com through FormSubmit, which
-           needs no account and no server. site.js posts it to the /ajax
-           endpoint so it works on any domain (and on localhost) without the
-           absolute _next redirect FormSubmit would otherwise require; the
-           plain action below is the no-JavaScript fallback.
-
-           ⚠ ONE-TIME ACTIVATION: the very first submission makes FormSubmit
-           email bndrvids@gmail.com asking you to confirm the address. Nothing
-           is delivered until you click that link. Do it before you send any
-           traffic here. See README, "Making the form work".
-      ───────────────────────────────────────────────────────────────────── -->
-      <form class="form reveal" data-call-form
-            name="call-request"
-            method="POST"
-            action="https://formsubmit.co/bndrvids@gmail.com"
-            data-mail-endpoint="https://formsubmit.co/ajax/bndrvids@gmail.com">
-
-        <input type="hidden" name="_subject" value="New call request — BNDRVIDS">
-        <input type="hidden" name="_template" value="table">
-        <input type="hidden" name="_captcha" value="false">
-        <!-- FormSubmit drops any submission where this stays filled. -->
-        <input type="text" name="_honey" tabindex="-1" autocomplete="off" style="display:none" aria-hidden="true">
-
-        <div class="field">
-          <label for="listing-field">Listing link <span class="req">Required</span></label>
-          <input type="text" id="listing-field" name="listing"
-                 inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false"
-                 placeholder="https://www.zillow.com/…" required>
-          <span class="hint">Zillow, Apartments.com, your own site, a link to a photo folder, etc.</span>
-        </div>
-
-        <div class="form__pair">
-          <div class="field">
-            <label for="name-field">Name <span class="req">Required</span></label>
-            <input type="text" id="name-field" name="name" autocomplete="name" required>
-          </div>
-          <div class="field">
-            <label for="email-field">Email <span class="req">Required</span></label>
-            <input type="email" id="email-field" name="email" autocomplete="email" required>
-          </div>
-        </div>
-
-        <div class="form__pair">
-          <div class="field">
-            <label for="company-field">Company</label>
-            <input type="text" id="company-field" name="company" autocomplete="organization">
-          </div>
-          <div class="field">
-            <label for="portfolio-field">Units you manage</label>
-            <select id="portfolio-field" name="portfolio">
-              <option value="">Select…</option>
-              <option>1–10</option>
-              <option>11–50</option>
-              <option>51–200</option>
-              <option>201–1,000</option>
-              <option>1,000+</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Chips rather than a free-text box: "whenever works" is the most
-             common answer to an open field and it costs three emails to pin
-             down. Multi-select means one reply lands a time. -->
-        <fieldset class="field">
-          <legend>When suits you <span class="req">Required</span></legend>
-
-          <!-- Two questions, so two labelled groups. Set 6px apart with no
-               headings they read as one undifferentiated field of twelve chips. -->
-          <div class="chipgroup">
-          <span class="chips__label" id="days-label">Which days</span>
-          <div class="chips" data-chip-group="days" role="group" aria-labelledby="days-label">
-            <label class="chip"><input type="checkbox" name="days" value="Monday"><span><i>Mon</i></span></label>
-            <label class="chip"><input type="checkbox" name="days" value="Tuesday"><span><i>Tue</i></span></label>
-            <label class="chip"><input type="checkbox" name="days" value="Wednesday"><span><i>Wed</i></span></label>
-            <label class="chip"><input type="checkbox" name="days" value="Thursday"><span><i>Thu</i></span></label>
-            <label class="chip"><input type="checkbox" name="days" value="Friday"><span><i>Fri</i></span></label>
-            <!-- Weekend availability is mornings only, so the constraint is baked
-                 into the chip itself. A plain "Sat" chip would let someone pair it
-                 with Evening and expect a call you won't take. -->
-            <label class="chip"><input type="checkbox" name="days" value="Saturday morning" data-weekend><span><i>Sat</i><em>AM only</em></span></label>
-            <label class="chip"><input type="checkbox" name="days" value="Sunday morning" data-weekend><span><i>Sun</i><em>AM only</em></span></label>
-          </div>
-          </div>
-
-          <div class="chipgroup">
-          <!-- The zone has to be on the windows themselves. The form asks which
-               time zone the visitor is in but never said which one these hours
-               are in, so someone in Pacific ticking "Early 8–10" was picking a
-               slot that is 5am for them — a booking error the form invited. -->
-          <span class="chips__label" id="times-label">What time <span class="chips__zone">Eastern time</span></span>
-          <!-- data-weekend-ok marks the slots that survive a weekend-only
-               selection; site.js disables and clears the rest. -->
-          <div class="chips" data-chip-group="times" role="group" aria-labelledby="times-label">
-            <label class="chip"><input type="checkbox" name="times" value="Early (8–10)" data-weekend-ok><span><i>Early</i><em>8–10</em></span></label>
-            <label class="chip"><input type="checkbox" name="times" value="Late morning (10–12)" data-weekend-ok><span><i>Late AM</i><em>10–12</em></span></label>
-            <label class="chip"><input type="checkbox" name="times" value="Midday (12–2)"><span><i>Midday</i><em>12–2</em></span></label>
-            <label class="chip"><input type="checkbox" name="times" value="Afternoon (2–5)"><span><i>Afternoon</i><em>2–5</em></span></label>
-            <label class="chip"><input type="checkbox" name="times" value="Evening (after 5)"><span><i>Evening</i><em>after 5</em></span></label>
-          </div>
-          </div>
-
-          <!-- The submit-side note sits ~790px below these chips. When the only
-               thing missing is a chip, the explanation has to be here. -->
-          <p class="formnote" data-chip-note role="alert" hidden></p>
-          <span class="hint" data-weekend-note hidden>Weekend calls are mornings only — later slots are unavailable unless you also pick a weekday.</span>
-          <!-- "Weekends are mornings only" was already on the Sat and Sun chips
-               ("AM ONLY") and in the note above. Three statements of one rule. -->
-          <span class="hint">Tick everything that works — the more you pick, the sooner we can confirm. Calls run about twenty minutes.</span>
-        </fieldset>
-
-        <div class="form__pair">
-          <div class="field">
-            <!-- "Your" matters now that the windows above are labelled Eastern:
-                 without it the two zone controls read as the same question. -->
-            <label for="tz-field">Your time zone <span class="req">Required</span></label>
-            <select id="tz-field" name="timezone" required>
-              <option value="">Select…</option>
-              <option>Eastern (ET)</option>
-              <option>Central (CT)</option>
-              <option>Mountain (MT)</option>
-              <option>Pacific (PT)</option>
-              <option>Alaska / Hawaii</option>
-              <option>Outside the US</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="soon-field">How soon</label>
-            <select id="soon-field" name="urgency">
-              <option value="">Select…</option>
-              <option>This week</option>
-              <option>Next week</option>
-              <option>Within the month</option>
-              <option>Just looking for now</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="field">
-          <label for="notes-field">Anything we should know</label>
-          <textarea id="notes-field" name="notes" rows="3"
-                    placeholder="Brand colors, a unit that's been sitting, a format you need…"></textarea>
-        </div>
-
-        <button class="btn btn--solid btn--lg" type="submit" style="margin-top:16px">Request a call</button>
-        <p class="formnote" data-form-note hidden></p>
-        <p class="micro" style="margin-top:16px">
-          We use this to set up the call and build your sample. We reply within 1–3 business days. No list, no sequence, no drip.
-        </p>
-      </form>
 
       <!-- ── What happens next ──────────────────────────────────────────── -->
       <aside class="startaside reveal" style="--i:1">
         <h2 class="startaside__h">What happens next</h2>
         <ol class="startaside__steps">
-          <!-- site.js replaces this line when the cal.com booker is live: the
-               confirmation is then instant, and saying otherwise beside a
-               calendar that just confirmed would read as carelessness. -->
-          <li data-step-confirm><span>01</span> We confirm a time by email within 1–3 business days.</li>
+          <li><span>01</span> Pick a slot. It's confirmed the moment you book — calendar invite included, nothing to wait for.</li>
           <li><span>02</span> We pull the photos off your listing and build the walkthrough before we speak — so there's something real to look at, not a pitch deck.</li>
-          <li><span>03</span> We play it on the call, show you which photos became which shots, and change anything small while you watch.</li>
+          <li><span>03</span> Thirty minutes on the call: we play it, show you which photos became which shots, and change anything small while you watch.</li>
           <li><span>04</span> Say yes and the invoice follows; the files land once it clears. Say no and that's genuinely the end of it — no sequence, no chasing.</li>
         </ol>
 

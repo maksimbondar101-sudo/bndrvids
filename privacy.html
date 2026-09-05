@@ -27,6 +27,11 @@
 <body>
 <a class="skip" href="#main">Skip to content</a>
 
+<!-- How far into the page you are. A position readout, not decoration:
+     it moves only in response to a scroll the reader performed, and it
+     hides itself on pages too short to scroll. -->
+<div class="progress" data-progress aria-hidden="true"><div class="progress__bar"></div></div>
+
 <header class="nav">
   <div class="container nav__inner">
     <a class="nav__logo" href="/">BNDRVIDS</a>
@@ -75,9 +80,9 @@
         does not hand your address to anyone else.
       </p>
       <p>
-        The site is hosted by Netlify, which keeps standard server logs including
-        IP addresses, for security and reliability. That is Netlify's processing,
-        under Netlify's policy, and we do not query those logs to build any picture
+        The site is hosted by Vercel, which keeps standard server logs including
+        IP addresses, for security and reliability. That is Vercel's processing,
+        under Vercel's policy, and we do not query those logs to build any picture
         of individual visitors.
       </p>
 
@@ -122,7 +127,7 @@
           <dd>Gmail carries our correspondence with you, Google Calendar holds the appointment, and calls take place on Google Meet.</dd>
         </div>
         <div>
-          <dt>Netlify</dt>
+          <dt>Vercel</dt>
           <dd>Hosts this website and keeps the server logs described above.</dd>
         </div>
       </dl>

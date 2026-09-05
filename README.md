@@ -1,10 +1,10 @@
 # BNDRVIDS
 
-Static marketing site for BNDRVIDS. Seven pages, no build step, no framework,
-no dependencies. Every file in this repo is either served as-is or is a note to
-whoever maintains it.
+Static marketing site for BNDRVIDS. Eight pages plus a 404, no build step, no
+framework, no dependencies. Every file in this repo is either served as-is or
+is a note to whoever maintains it.
 
-Live at **https://bndrvids.com**. Migrating from Netlify to Vercel: see below.
+Live at **https://bndrvids.com**, hosted on Vercel.
 
 ---
 
@@ -15,54 +15,45 @@ npx serve .          # http://localhost:3000 — handles /pricing without .html
 ```
 
 `python3 -m http.server 8000` also works, but extensionless URLs like
-`/pricing` will 404 under it, because that rewriting is something Netlify does
-for you in production. Every nav link on the site uses that form, so use
+`/pricing` will 404 under it, because in production that rewriting is
+`cleanUrls` in `vercel.json`. Every nav link on the site uses that form, so use
 `npx serve` if you are checking navigation.
 
 ## Deploying
 
-**Pushing to `main` deploys the site.** There is no build command and the
-output directory is the repo root, on either host.
+**Pushing to `main` deploys the site.** Vercel builds from the repo root with
+no build command, no output directory and framework preset "Other". There is
+nothing to run.
 
-### Migrating to Vercel
+| File | What it does |
+|---|---|
+| `vercel.json` | Security headers, the Content-Security-Policy, `cleanUrls`, immutable font caching |
+| `.vercelignore` | Keeps maintainer-facing files out of the deployment entirely |
 
-The repo carries configuration for both hosts while the cutover settles.
+Two settings in `vercel.json` are load-bearing rather than cosmetic:
 
-| File | Read by | Status |
-|---|---|---|
-| `vercel.json` | Vercel | The live configuration once DNS moves |
-| `.vercelignore` | Vercel | Keeps maintainer files out of the deployment |
-| `netlify.toml` | Netlify | Rollback path. Not uploaded to Vercel |
-| `_headers`, `_redirects` | Netlify manual deploys | Rollback path. Not uploaded to Vercel |
+- **`cleanUrls: true`.** Every internal link on this site is extensionless
+  (`/pricing`, never `/pricing.html`). Without it, `/` is the only URL that
+  resolves and every other link on every page 404s.
+- **`trailingSlash: false`.** The canonical tag on each page has no trailing
+  slash. If the two disagree, every page becomes reachable at two URLs.
 
-`vercel.json` carries the identical Content-Security-Policy, the same four
-security headers and the same immutable font caching. Verified byte-for-byte
-against `netlify.toml` rather than retyped.
+`.vercelignore` is how maintainer-facing files stay unreachable: anything
+listed there is never uploaded, so there is no file to serve rather than a file
+that has to be 404'd by a rule. **If you add another one, add it there in the
+same commit.**
 
-Two things differ, both improvements:
+### DNS
 
-- **`cleanUrls: true`** replaces the extensionless-URL behaviour Netlify did
-  implicitly. Every nav link on this site depends on it, so it is now stated
-  rather than assumed.
-- **`.vercelignore` replaces three forced 404 redirects.** Netlify had to serve
-  `README.md` and then 404 it. Vercel simply never uploads it, so there is no
-  file to reach. If you add another maintainer-facing file, add it there in the
-  same commit.
+`bndrvids.com` runs its DNS through Cloudflare, pointing at Vercel: an `A`
+record on the apex and a `CNAME` on `www`.
 
-**Order matters on the cutover.** Deploy to Vercel and verify on its
-`.vercel.app` URL *before* moving DNS. Both hosts serve the same commit, so
-while records propagate some visitors hit Netlify and some hit Vercel and
-neither can tell. Moving DNS first creates a window where the domain points at
-nothing.
+**Both records must stay on grey cloud, "DNS only".** Cloudflare proxying in
+front of Vercel means Vercel never sees the request and cannot complete its
+certificate challenge. That has taken this site down once already.
 
-**DNS records come from Vercel's own dashboard**, shown when you add the
-domain. Use those rather than any value written down here, which can go stale.
-
-### Once Vercel is confirmed live
-
-Delete `netlify.toml`, `_headers`, `_redirects`, and the block naming them in
-`.vercelignore`. Leaving dead configuration in the repo misleads whoever reads
-it next.
+If you ever repoint it, take the record values from Vercel's own Domains panel
+rather than from anything written down here, which can go stale.
 
 ---
 
@@ -123,9 +114,8 @@ really does take that long. Booking does not.
 ### The CSP consequence
 
 cal.com is the only third party permitted to run on this site, and it took four
-grants in both `netlify.toml` and `_headers`: `script-src` for the embed,
-`frame-src` for the booker, `connect-src` for availability lookups, `img-src`
-for avatars. If a fifth third-party host ever appears in that policy, something
+grants in `vercel.json`: `script-src` for the embed, `frame-src` for the
+booker, `connect-src` for availability lookups, `img-src` for avatars. If a fifth third-party host ever appears in that policy, something
 has been added that should not have been.
 
 ---
@@ -174,9 +164,15 @@ Held deliberately, and checked rather than assumed:
   (`1–3`, `8–10`) are a different character and are correct typography, so
   those stay.
 
-The one scroll listener that remains switches the fixed header from transparent
-to a solid backdrop past 24px. That is legibility, not animation: without it the
-nav links sit unreadable over whatever scrolls beneath them.
+There is still exactly **one scroll listener**, rAF-throttled, and two things
+ride it. It switches the fixed header from transparent to a solid backdrop past
+24px, without which the nav links sit unreadable over whatever scrolls beneath
+them. And it drives the 2px progress line across the top edge.
+
+Both are readouts rather than effects: they report a scroll the reader
+performed, they do not perform one. Nothing on this site starts moving because
+an element came into view. If you add a third thing that needs scroll position,
+put it in that same handler rather than adding a listener.
 
 ---
 
@@ -231,25 +227,20 @@ currently contains none.
 ## How the code is organised
 
 ```
-*.html                    seven pages, each self-contained
+*.html                    eight pages plus 404.html, each self-contained
 assets/css/site.css       the whole design system, heavily commented
-assets/js/site.js         nav, reveals, the request form, four controls
+assets/js/site.js         nav, the cal.com loader, three controls
 assets/fonts/             both typefaces, self-hosted — see fonts/README.txt
-netlify.toml              headers, CSP, redirects (Git builds)
-_headers / _redirects     the same rules again (drag-and-drop deploys)
+vercel.json               headers, CSP, cleanUrls
+.vercelignore             what never reaches the deployment
 ```
 
-### Why the config exists twice
+### The Content-Security-Policy
 
-`netlify.toml` is authoritative for Git builds. `_headers` and `_redirects`
-cover manual and drag-and-drop deploys. Netlify processes both — a live deploy
-reports "6 redirect rules" and "4 header rules", which is all of them — and the
-rules are identical, so precedence never matters.
-
-**If you change one, change the other.** The site's Content-Security-Policy
-lives in both, and it is deliberately strict: no third-party origins at all.
-Adding a Google Fonts link, an analytics snippet or an embedded video would be
-blocked outright rather than silently allowed. That is the intended behaviour.
+It lives in one place, `vercel.json`, and it is deliberately strict. Adding a
+Google Fonts link, an analytics snippet or an embedded video would be blocked
+outright rather than silently allowed. That is the intended behaviour, and
+cal.com is the only exception anyone has made to it.
 
 ### The design system
 
@@ -265,7 +256,7 @@ set. Everything respects `prefers-reduced-motion`.
 
 ### The interactive controls
 
-Four things in `site.js` are controls rather than decoration:
+Three things in `site.js` are controls rather than decoration:
 
 - **Photo gauge** (`how-it-works.html`) — restates the requirements table as a
   slider. **Its copy is that policy, not a new promise.** If the Photos row
@@ -273,14 +264,13 @@ Four things in `site.js` are controls rather than decoration:
   `grid-template-columns` on `.gauge__bands` too — those numbers are the count
   of slider values per band, so a drawn threshold sits where the verdict
   actually changes.
-- **Listing field readout** — names the portal back to whoever pasted a link.
-  Recognition only; it never blocks a submission.
-- **Swap sequence** (homepage) — carries the argument the missing photographs
-  would have carried.
+- **Compare slider** (homepage) — drags between a listing photograph and the
+  frame it becomes. It carries the argument the missing footage would have
+  carried, so it matters more than it looks until real video exists.
 - **FAQ** — animates closing, which CSS cannot do alone, because a closed
   `<details>` hides its content before any transition can run.
 
-All four degrade to working, unstyled behaviour without JavaScript.
+All three degrade to working, unstyled behaviour without JavaScript.
 
 ---
 
@@ -292,4 +282,6 @@ Worth thirty seconds after any change:
   CSP is doing its job and something is reaching for a third-party font.
 - `/pricing`, `/how-it-works`, `/about`, `/contact` resolve **without** `.html`.
 - No horizontal scrollbar at 390px wide.
-- The request form still reaches your inbox — see *Making the form work*.
+- `/start` renders an actual cal.com calendar, not the fallback link. The
+  fallback is deliberately silent, so a broken embed looks like a design
+  choice unless you check.

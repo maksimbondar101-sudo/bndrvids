@@ -1,17 +1,9 @@
 # Files that live in the repo but must never be served.
 #
-# Netlify needed three forced 404 redirects to hide these. Vercel does it
-# better: anything listed here is not uploaded at all, so there is no file to
-# reach rather than a file that 404s. If you add another maintainer-facing file
-# to the repo, add it here in the same commit.
+# Anything listed here is never uploaded, so there is no file to reach rather
+# than a file that has to be 404'd by a rule. If you add another
+# maintainer-facing file to the repo, add it here in the same commit.
 
 README.md
 serve.ps1
 assets/fonts/README.txt
-
-# The Netlify configuration. Kept in the repo as a rollback path while the DNS
-# cutover settles, but Vercel neither reads nor should serve it. Delete these
-# three files, and this block, once bndrvids.com is confirmed on Vercel.
-netlify.toml
-_headers
-_redirects

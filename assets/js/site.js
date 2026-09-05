@@ -12,6 +12,20 @@
   var PREVIEW_SEARCH = function () { return window.location.search; };
 
   /* --- Nav: solidify on scroll, toggle on mobile -------------------------- */
+  /* The scroll progress line rides this same handler on purpose. A second
+     scroll listener would mean two rAF callbacks racing to describe one
+     gesture, and the site keeps exactly one. */
+  var progress = document.querySelector('[data-progress]');
+  var progressBar = progress && progress.querySelector('.progress__bar');
+  /* scrollHeight is a layout read, so it is measured on resize rather than on
+     every frame of every scroll. */
+  var scrollMax = 0;
+  var measureScroll = function () {
+    if (!progress) return;
+    scrollMax = document.documentElement.scrollHeight - window.innerHeight;
+    progress.classList.toggle('is-live', scrollMax > 40);
+  };
+
   var nav = document.querySelector('.nav');
   if (nav) {
     /* rAF-throttled: the raw scroll event fires far more often than the screen
@@ -25,9 +39,18 @@
         wasScrolled = scrolled;
         nav.classList.toggle('is-scrolled', scrolled);
       }
+      if (progressBar && scrollMax > 40) {
+        var p = window.scrollY / scrollMax;
+        progressBar.style.setProperty('--p', (p < 0 ? 0 : p > 1 ? 1 : p).toFixed(4));
+      }
       ticking = false;
     };
+    measureScroll();
     setNavState();
+    /* The page gets taller as fonts swap in and media decodes, so the first
+       measurement is not the last one that matters. */
+    window.addEventListener('resize', function () { measureScroll(); setNavState(); });
+    window.addEventListener('load', function () { measureScroll(); setNavState(); });
     window.addEventListener('scroll', function () {
       if (!ticking) { ticking = true; window.requestAnimationFrame(setNavState); }
     }, { passive: true });

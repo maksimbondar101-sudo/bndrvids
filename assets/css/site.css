@@ -345,6 +345,38 @@ html { color-scheme: dark; scrollbar-color: #2A2A2E var(--base); }
   .ctarow .btn { width: 100%; }
 }
 
+/* --- Scroll progress ------------------------------------------------------
+   One 2px line across the top edge, filling as the page moves under you. It
+   is a position readout rather than an effect: nothing about it animates on
+   its own, it only ever reports a scroll the reader performed.
+
+   scaleX, not width, so tracking the scroll costs a composite rather than a
+   layout on every frame. No transition on the bar itself either: a transition
+   would make it lag the scroll it is supposed to be reporting.
+  ------------------------------------------------------------------------- */
+.progress {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 2px;
+  z-index: 150;
+  background: var(--line);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 300ms var(--ease);
+}
+/* Only shown once there is something to report. A bar sitting permanently
+   full on a short page is noise pretending to be information. */
+.progress.is-live { opacity: 1; }
+.progress__bar {
+  height: 100%;
+  background: var(--accent);
+  transform: scaleX(var(--p, 0));
+  transform-origin: 0 50%;
+}
+@media (prefers-reduced-motion: reduce) {
+  .progress { transition: none; }
+}
+
 /* --- Nav ------------------------------------------------------------------ */
 .nav {
   position: fixed;
@@ -1169,6 +1201,18 @@ html { color-scheme: dark; scrollbar-color: #2A2A2E var(--base); }
   transition: color 300ms var(--ease);
 }
 .swap__replay:hover { color: var(--text); }
+/* 120x32 clears the 24px WCAG minimum but is still a small thing to hit with a
+   thumb. The hit area is expanded to 44px with a pseudo-element rather than by
+   growing the button, so the touch target moves and the layout does not. */
+.swap__replay { position: relative; }
+.swap__replay::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  top: 50%;
+  height: 44px;
+  transform: translateY(-50%);
+}
 .swap__replay::before {
   content: '';
   width: 14px; height: 1px;

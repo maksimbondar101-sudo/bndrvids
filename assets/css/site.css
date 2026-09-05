@@ -1014,36 +1014,17 @@ html { color-scheme: dark; scrollbar-color: #2A2A2E var(--base); }
 .media[data-hover]::before { transition: opacity 500ms var(--ease); }
 .media[data-hover]:hover::before { opacity: 0.7; }
 
-/* 3 · The eyebrow rule draws itself as its section arrives. Once. */
-.js .reveal .eyebrow::before,
-.js .eyebrow.reveal::before {
-  transform: translateY(-1px) scaleX(0);
-  transform-origin: left;
-  transition: transform var(--dur) var(--ease) 120ms;
-}
-.js .reveal.is-in .eyebrow::before,
-.js .eyebrow.reveal.is-in::before { transform: translateY(-1px) scaleX(1); }
-
-/* --- Motion: one gesture, one duration, one curve --------------------------
-   Scoped to .js, which an inline script in <head> adds. Content is visible by
-   default; only a page that is definitely running JS ever hides it. If the
-   script fails, 404s, or is blocked, the site renders in full — it just doesn't
-   animate. A reveal effect must never be able to blank the page.
+/* The scroll-reveal system that stood here is gone. Every block on every page
+   faded and rose as it came into view, the eyebrow rules drew themselves in,
+   and a hairline tracked the scrollbar under the header. Individually small;
+   together the page could not be read without it performing first. Content is
+   simply present when it loads now. What still moves does so because a
+   pointer, a value, or a button asked it to.
   ------------------------------------------------------------------------- */
-.js .reveal {
-  opacity: 0;
-  transform: translateY(12px);
-  transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
-  transition-delay: calc(var(--i, 0) * 60ms);
-}
-.js .reveal.is-in { opacity: 1; transform: none; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
-  .js .reveal { opacity: 1; transform: none; }
-  /* The eyebrow rule and tile drift are decorative — land them, don't play them. */
-  .js .reveal .eyebrow::before,
-  .js .eyebrow.reveal::before { transform: translateY(-1px) scaleX(1); }
+  /* The tile drift is decorative: land it, don't play it. */
   .media[data-hover]:hover > video,
   .media[data-hover]:hover > img { transform: none; }
   html { scroll-behavior: auto; }
@@ -1064,25 +1045,6 @@ html { color-scheme: dark; scrollbar-color: #2A2A2E var(--base); }
    end of this file already neutralises transitions globally; the specific
    opt-outs each feature needs sit with that feature.
    ========================================================================== */
-
-/* --- Scroll progress: a hairline under the fixed header ---------------------
-   The site is long and the sections are tall, so "how much of this is left"
-   is a real question on a first visit. One pixel of accent answers it without
-   occupying any layout. Width is driven from JS as a transform, so it costs a
-   compositor frame and never a reflow.
-  ------------------------------------------------------------------------- */
-.nav__progress {
-  position: absolute;
-  left: 0; right: 0; bottom: -1px;
-  height: 1px;
-  background: var(--accent);
-  transform: scaleX(0);
-  transform-origin: left;
-  opacity: 0;
-  transition: opacity 300ms var(--ease);
-  pointer-events: none;
-}
-.nav.is-scrolled .nav__progress { opacity: 1; }
 
 /* --- The swap block, animated ----------------------------------------------
    This block makes the site's central claim — six photos become one moving
@@ -1323,12 +1285,11 @@ html { color-scheme: dark; scrollbar-color: #2A2A2E var(--base); }
 .steps .step:hover { opacity: 1; }
 
 @media (prefers-reduced-motion: reduce) {
-  /* The swap sequence is an argument, not an ornament, so it lands in its
-     finished state rather than being removed: frames lit, rule filled. */
+  /* The swap sequence only runs when its button is pressed, and that button is
+     hidden here, so there is nothing left to suppress but the animation itself. */
   .swap.is-playing .swap__photos .media,
   .swap.is-playing .swap__rule::after,
   .swap.is-playing .swap__out .media::after { animation: none; }
-  .swap.is-playing .swap__rule::after { transform: scaleY(1); opacity: 0.35; }
   .swap__replay { display: none; }
   .faq .faq__a { transition: none; }
   .steps:hover .step { opacity: 1; }
@@ -1364,3 +1325,55 @@ html { color-scheme: dark; scrollbar-color: #2A2A2E var(--base); }
   color: var(--muted);
   margin-bottom: var(--gap-block);
 }
+
+
+/* --- Legal pages ------------------------------------------------------------
+   /terms and /privacy are the only pages here meant to be read straight
+   through, so they get a single measured column rather than the grid the
+   marketing pages use. Everything else is inherited: same ladder, same colours,
+   same zero radius.
+  ------------------------------------------------------------------------- */
+.legal { max-width: 68ch; }
+.legal h2 {
+  font-size: var(--t-md);
+  font-weight: 500;
+  letter-spacing: var(--ls-h3);
+  line-height: var(--lh-h3);
+  margin-top: var(--gap-block);
+  padding-top: var(--gap-element);
+  border-top: 1px solid var(--line);
+}
+.legal h2:first-child { margin-top: 0; padding-top: 0; border-top: none; }
+.legal p { color: var(--muted); margin-top: var(--gap-element); }
+.legal p strong, .legal li strong { color: var(--text); font-weight: 500; }
+.legal ul { margin-top: var(--gap-element); }
+.legal ul li {
+  position: relative;
+  color: var(--muted);
+  font-size: var(--t-sm);
+  padding-left: 22px;
+  margin-top: 10px;
+}
+/* The same short rule the pricing lists use, so a bullet is one idea site-wide. */
+.legal ul li::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0.72em;
+  width: 12px; height: 1px;
+  background: var(--line-strong);
+}
+.legal .speclist { margin-top: var(--gap-element); }
+
+/* The one clause that is deliberately unfinished. It should look unfinished. */
+.legal__todo {
+  border-left: 2px solid var(--accent);
+  background: var(--surface);
+  padding: 14px 18px;
+}
+.legal__stamp { margin-top: var(--gap-element); }
+
+/* Terms and Privacy sit in the footer base beside the copyright, not in the
+   navigation. They are reference, not a destination anyone browses to. */
+.footer__legal { display: inline-flex; gap: var(--gap-element); }
+.footer__legal a { transition: color 300ms var(--ease); }
+.footer__legal a:hover { color: var(--text); }

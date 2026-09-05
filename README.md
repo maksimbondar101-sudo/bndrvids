@@ -95,6 +95,56 @@ has been added that should not have been.
 
 ---
 
+## Terms and Privacy
+
+`/terms` and `/privacy` are linked from the footer of every page and listed in
+the sitemap. Both are written from how this business actually works rather than
+from a template, so they say real things: the 48-hour minimum notice, the
+no-invoice-if-you-decline rule, that the video only shows what your photographs
+show, that no analytics or tracking runs on this site.
+
+**Two things need your attention before you rely on them.**
+
+**Neither has been reviewed by a lawyer.** They were written to be accurate and
+readable, which is not the same as being legally sufficient in your state. Have
+someone qualified read them.
+
+**Clause 12 of the Terms is deliberately unfinished.** Governing law needs the
+state whose law applies and where disputes would be heard, which depends on
+where the business is registered. It is left blank and visibly flagged on the
+page rather than guessed at: a jurisdiction stated wrongly is worse than one not
+stated at all. Fill it in, then remove the `legal__todo` styling from that
+paragraph.
+
+The clause worth reading yourself is **6, on photograph rights**. Listing
+photographs are very often licensed to the agent or brokerage rather than owned
+outright, and portals hold their own rights over what is uploaded to them. The
+Terms put that risk on the customer, because we cannot verify it. That is a
+commercial position, not a neutral fact, and you should be comfortable with it.
+
+---
+
+## Design constraints
+
+Held deliberately, and checked rather than assumed:
+
+- **No rounded corners anywhere.** Zero border-radius is a design-system rule.
+- **No purple, and no gradient used as decoration.** The palette is four
+  greys plus one amber. The only gradients are the hero scrim and the media
+  placeholder, both greyscale.
+- **No scroll-triggered animation.** There is no IntersectionObserver on this
+  site and nothing is hidden waiting to be scrolled into view. Content is
+  present when the page loads.
+- **No em dashes in visitor-facing copy.** En dashes in numeric ranges
+  (`1–3`, `8–10`) are a different character and are correct typography, so
+  those stay.
+
+The one scroll listener that remains switches the fixed header from transparent
+to a solid backdrop past 24px. That is legibility, not animation: without it the
+nav links sit unreadable over whatever scrolls beneath them.
+
+---
+
 ## Things marked "see README" in the code
 
 Three places in the markup are waiting on information only you can supply.

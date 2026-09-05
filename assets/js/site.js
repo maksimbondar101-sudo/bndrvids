@@ -109,35 +109,10 @@
     }
   }
 
-  /* --- Reveal: fade + 12px rise, once, staggered 60ms --------------------- */
-  var reveals = document.querySelectorAll('.reveal');
+  /* Motion that ran on scroll is gone: the reveal observer, the progress
+     hairline, and the swap block's scroll trigger. `reduced` is still read
+     because what remains still has to respect it. */
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  var showAll = function () {
-    Array.prototype.forEach.call(reveals, function (el) { el.classList.add('is-in'); });
-  };
-
-  if (reduced || !('IntersectionObserver' in window)) {
-    showAll();
-  } else {
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (entry) {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('is-in');
-          io.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.15, rootMargin: '0px 0px -5% 0px' });
-
-    Array.prototype.forEach.call(reveals, function (el) { io.observe(el); });
-
-    /* Safety net: if the observer hasn't fired for anything already on screen
-       within a second, reveal everything. Better a missed animation than a
-       page that renders blank. */
-    window.setTimeout(function () {
-      if (!document.querySelector('.reveal.is-in')) showAll();
-    }, 1000);
-  }
 
   /* --- Media: hide the filename label once real footage loads -------------- */
   Array.prototype.forEach.call(document.querySelectorAll('.media'), function (frame) {
@@ -385,56 +360,20 @@
     });
   });
 
-  /* --- Scroll progress ------------------------------------------------------
-     Same rAF throttle as the nav state, and for the same reason: this reads
-     scrollY, and doing that per scroll event rather than per frame is how a
-     progress bar ends up costing more than the page it measures. */
-  var progress = document.querySelector('.nav__progress');
-  if (progress) {
-    var pTicking = false;
-    var drawProgress = function () {
-      var doc = document.documentElement;
-      var scrollable = doc.scrollHeight - window.innerHeight;
-      /* A page shorter than the viewport has no progress to report, and the
-         division would be by zero. */
-      var ratio = scrollable > 0 ? Math.min(1, Math.max(0, window.scrollY / scrollable)) : 0;
-      progress.style.transform = 'scaleX(' + ratio + ')';
-      pTicking = false;
-    };
-    drawProgress();
-    window.addEventListener('scroll', function () {
-      if (!pTicking) { pTicking = true; window.requestAnimationFrame(drawProgress); }
-    }, { passive: true });
-    window.addEventListener('resize', drawProgress);
-  }
-
-  /* --- The swap sequence ----------------------------------------------------
-     Plays once when the block arrives, and again on demand. Restarting a CSS
-     animation needs the class off, a reflow read, then the class back on —
-     without the read the browser coalesces both changes into no change. */
+  /* --- The swap sequence -----------------------------------------------------
+     Plays when asked, not when scrolled past. Restarting a CSS animation needs
+     the class off, a forced reflow read, then the class back on; without that
+     read the browser coalesces both changes into no change at all. */
   var swap = document.querySelector('.swap');
   if (swap) {
-    var playSwap = function () {
-      swap.classList.remove('is-playing');
-      void swap.offsetWidth;                 /* forces the restart; do not remove */
-      swap.classList.add('is-playing');
-    };
-
-    if (reduced || !('IntersectionObserver' in window)) {
-      swap.classList.add('is-playing');
-    } else {
-      var swapIO = new IntersectionObserver(function (entries) {
-        entries.forEach(function (entry) {
-          if (!entry.isIntersecting) return;
-          playSwap();
-          swapIO.unobserve(entry.target);
-        });
-      }, { threshold: 0.35 });
-      swapIO.observe(swap);
-    }
-
     var replay = swap.querySelector('[data-swap-replay]');
-    if (replay) replay.addEventListener('click', playSwap);
+    if (replay) {
+      replay.addEventListener('click', function () {
+        swap.classList.remove('is-playing');
+        void swap.offsetWidth;              /* forces the restart; do not remove */
+        swap.classList.add('is-playing');
+      });
+    }
   }
 
   /* --- Photo gauge ----------------------------------------------------------
@@ -454,16 +393,16 @@
     var BANDS = [
       { max: 3, band: 0, low: true,
         title: 'We\u2019d tell you not to bother.',
-        body: 'Below four photos there isn\u2019t enough to build a walkthrough worth paying for. Send it anyway \u2014 we\u2019ll say so before you pay, rather than take the money.' },
+        body: 'Below four photos there isn\u2019t enough to build a walkthrough worth paying for. Send it anyway. We\u2019ll say so before you pay, rather than take the money.' },
       { max: 9, band: 1,
         title: 'Six works. Expect a short one.',
-        body: 'Bad lighting and odd angles we can work with, and usually improve. What we can\u2019t do is invent coverage \u2014 the walkthrough only goes where your photos went.' },
+        body: 'Bad lighting and odd angles we can work with, and usually improve. What we can\u2019t do is invent coverage: the walkthrough only goes where your photos went.' },
       { max: 15, band: 2,
         title: 'Plenty.',
         body: 'Ten to fifteen covers a unit comfortably, room by room, with enough angles to move between them rather than cut.' },
       { max: Infinity, band: 3,
         title: 'Ideal.',
-        body: 'More than fifteen is where this gets good \u2014 every extra angle gives the walkthrough somewhere else to go.' }
+        body: 'More than fifteen is where this gets good. Every extra angle gives the walkthrough somewhere else to go.' }
     ];
 
     var render = function () {

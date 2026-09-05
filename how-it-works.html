@@ -168,18 +168,34 @@
         <p>So nobody has to email us asking for "the square one for Instagram."</p>
       </div>
 
-      <div class="absence">
-        <div class="absence__item">
-          <h3>The master</h3>
-          <p>16:9, 1080p or 4K, for your leasing page, YouTube, and any listing portal that takes video.</p>
+      <!-- Three formats stated as three paragraphs asked the reader to picture
+           the difference in shape. Picking one now makes the frame that shape,
+           which is the difference. The frame is a placeholder like every other
+           on this site: drop a poster or a <video> in and this needs no edit.
+
+           Tabs, not scroll. Nothing here moves unless it is clicked. -->
+      <div class="formats" data-formats>
+        <div class="formats__picker" role="tablist" aria-label="Delivery formats">
+          <button class="formats__tab" type="button" role="tab" aria-selected="true"
+                  id="fmt-master" aria-controls="fmt-panel" data-format="16 / 9">
+            <span>The master</span><em>16:9</em>
+          </button>
+          <button class="formats__tab" type="button" role="tab" aria-selected="false" tabindex="-1"
+                  id="fmt-portal" aria-controls="fmt-panel" data-format="4 / 5">
+            <span>Portal-safe</span><em>4:5</em>
+          </button>
+          <button class="formats__tab" type="button" role="tab" aria-selected="false" tabindex="-1"
+                  id="fmt-vertical" aria-controls="fmt-panel" data-format="9 / 16">
+            <span>Vertical</span><em>9:16</em>
+          </button>
         </div>
-        <div class="absence__item">
-          <h3>Portal-safe exports</h3>
-          <p>Sized and encoded to upload cleanly to Zillow, Apartments.com and the MLS without re-compression.</p>
-        </div>
-        <div class="absence__item">
-          <h3>Vertical cutdowns</h3>
-          <p>9:16 edits for Instagram, TikTok, Facebook and paid social, where most people under 35 will actually see a property.</p>
+
+        <div class="formats__stage" id="fmt-panel" role="tabpanel" aria-labelledby="fmt-master">
+          <div class="media formats__frame" data-formats-frame></div>
+          <div class="formats__copy" aria-live="polite">
+            <h3 data-formats-title>The master</h3>
+            <p data-formats-body>16:9, 1080p or 4K, for your leasing page, YouTube, and any listing portal that takes video.</p>
+          </div>
         </div>
       </div>
     </div>

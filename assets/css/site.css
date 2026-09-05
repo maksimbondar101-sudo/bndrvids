@@ -557,21 +557,110 @@ html { color-scheme: dark; scrollbar-color: #2A2A2E var(--base); }
   .proof__item:first-child { border-top: none; }
 }
 
-/* --- Photos in / walkthrough out: the most important block on the site ----- */
-/* Photos small and flat on the left, video large on the right — the size
-   difference IS the argument. A 2-col photo grid made the left column taller
-   than the video and left the payoff stranded in dead space; 3 columns makes
-   the strip short and wide so both sides sit on the same optical line. */
-.swap { display: grid; grid-template-columns: 0.95fr auto 1.25fr; gap: var(--gap-block); align-items: center; }
+/* --- Photos in / walkthrough out: the most important block on the site -----
+   Was a three-column diagram: photos left, a rule, video right. It explained
+   the claim. It is now one frame with both halves stacked and a handle between
+   them, so a visitor proves the claim to themselves by dragging. The photo grid
+   below is unchanged and still holds the six placeholders.
+  ------------------------------------------------------------------------- */
 .swap__photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .swap__photos .media { filter: saturate(0.55) brightness(0.78); }
-.swap__mid { text-align: center; }
-.swap__rule { width: 1px; height: 56px; background: var(--line-strong); margin: 0 auto var(--gap-element); }
-.swap__mid .micro { display: block; white-space: nowrap; }
-@media (max-width: 1000px) {
-  .swap { grid-template-columns: 1fr; }
-  .swap__rule { width: 56px; height: 1px; margin-bottom: 12px; }
-  .swap__mid { padding-block: 8px; }
+
+/* --- The compare slider --------------------------------------------------- */
+.compare__frame {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--line-strong);
+  background: var(--base);
+  overflow: hidden;
+  touch-action: pan-y;              /* vertical scroll still works over it */
+}
+.compare__layer { position: absolute; inset: 0; }
+/* aspect-ratio:auto matters. Inside the frame these fill it exactly; without
+   the override .media--16x9 keeps its own ratio and, in the 4:3 frame used
+   below 700px, runs wider than the frame and past the viewport edge. The frame
+   clips it so nothing scrolls, but a box hanging off-screen is still wrong. */
+.compare__layer > .swap__photos,
+.compare__layer > .media { position: absolute; inset: 0; height: 100%; aspect-ratio: auto; }
+.compare__layer > .swap__photos { grid-template-rows: repeat(2, 1fr); gap: 4px; padding: 4px; }
+
+/* The top layer is clipped to the handle position. clip-path on a composited
+   layer, so dragging costs a paint and never a reflow. */
+.compare__layer--after {
+  clip-path: inset(0 0 0 var(--split, 52%));
+  will-change: clip-path;
+}
+
+.compare__tag {
+  position: absolute;
+  bottom: 14px; left: 16px;
+  z-index: 3;
+  font-size: var(--t-micro);
+  letter-spacing: var(--ls-micro);
+  text-transform: uppercase;
+  color: var(--text);
+  background: rgba(10, 10, 11, 0.72);
+  padding: 6px 10px;
+  pointer-events: none;
+}
+.compare__tag--right { left: auto; right: 16px; }
+
+/* The input is the control; it is invisible but exactly covers the frame, so
+   pointer and keyboard both drive the same value and there is no second
+   implementation to keep in sync. */
+.compare__range {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: ew-resize;
+  -webkit-appearance: none;
+  appearance: none;
+  background: none;
+}
+.compare__range::-webkit-slider-thumb { -webkit-appearance: none; width: 44px; height: 100%; cursor: ew-resize; }
+.compare__range::-moz-range-thumb { width: 44px; height: 100%; border: 0; border-radius: 0; background: transparent; cursor: ew-resize; }
+.compare__range:focus-visible + .compare__handle { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.compare__handle {
+  position: absolute;
+  top: 0; bottom: 0;
+  left: var(--split, 52%);
+  z-index: 3;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--text);
+  pointer-events: none;
+}
+/* The grip: a solid square with two dark strokes through it, drawn as
+   background layers rather than extra nodes. Square, because nothing on this
+   site has a radius, and a round handle would be the one exception. */
+.compare__handle::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 36px; height: 36px;
+  margin: -18px 0 0 -18px;
+  background:
+    linear-gradient(var(--base), var(--base)) 14px 12px / 2px 12px no-repeat,
+    linear-gradient(var(--base), var(--base)) 20px 12px / 2px 12px no-repeat,
+    var(--text);
+}
+
+.compare__note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gap-element);
+  margin-top: var(--gap-element);
+}
+.compare__note .swap__replay { margin-top: 0; margin-left: auto; }
+@media (max-width: 700px) {
+  .compare__frame { aspect-ratio: 4 / 3; }
+  .compare__note .swap__replay { margin-left: 0; }
 }
 
 /* --- Absence block: the moat, rendered as a section -------------------------
@@ -1060,60 +1149,11 @@ html { color-scheme: dark; scrollbar-color: #2A2A2E var(--base); }
   transition: filter 600ms var(--ease), border-color 600ms var(--ease);
   border: 1px solid transparent;
 }
-.swap.is-playing .swap__photos .media {
-  animation: swap-lift 2600ms var(--ease) both;
-  animation-delay: calc(var(--n) * 190ms);
-}
-@keyframes swap-lift {
-  0%   { filter: saturate(0.55) brightness(0.78); border-color: transparent; }
-  14%  { filter: saturate(1) brightness(1.18);    border-color: var(--accent); }
-  46%  { filter: saturate(0.7) brightness(0.92);  border-color: transparent; }
-  100% { filter: saturate(0.55) brightness(0.78); border-color: transparent; }
-}
-
-/* The rule between the two halves fills left-to-right as the frames land, so
-   the connection between them is drawn rather than implied. */
-.swap__rule { position: relative; overflow: hidden; }
-.swap__rule::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: var(--accent);
-  transform: scaleY(0);
-  transform-origin: top;
-}
-.swap.is-playing .swap__rule::after { animation: swap-fill 2600ms var(--ease) both; }
-@keyframes swap-fill {
-  0%, 18% { transform: scaleY(0); }
-  60%     { transform: scaleY(1); }
-  100%    { transform: scaleY(1); opacity: 0.35; }
-}
-@media (max-width: 1000px) {
-  .swap__rule::after { transform-origin: left; }
-  @keyframes swap-fill {
-    0%, 18% { transform: scaleX(0); }
-    60%     { transform: scaleX(1); }
-    100%    { transform: scaleX(1); opacity: 0.35; }
-  }
-}
-
-/* The output frame receives them: one sweep of accent across the top edge. */
-.swap__out .media::after {
-  content: '';
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: 2px;
-  background: var(--accent);
-  z-index: 4;
-  transform: scaleX(0);
-  transform-origin: left;
-}
-.swap.is-playing .swap__out .media::after { animation: swap-receive 2600ms var(--ease) both; }
-@keyframes swap-receive {
-  0%, 40% { transform: scaleX(0); opacity: 1; }
-  74%     { transform: scaleX(1); opacity: 1; }
-  100%    { transform: scaleX(1); opacity: 0; }
-}
+/* The three-column sequence that stood here animated a rule and a receiving
+   edge that no longer exist. What the button drives now is a sweep of the
+   compare handle: it runs the split from centre to one edge and back, which
+   teaches the drag affordance without anyone having to read the label. Driven
+   from JS because one value feeds both the clip-path and the handle. */
 
 /* Replaying is a real affordance, so it looks like one and takes focus. */
 .swap__replay {
@@ -1285,11 +1325,8 @@ html { color-scheme: dark; scrollbar-color: #2A2A2E var(--base); }
 .steps .step:hover { opacity: 1; }
 
 @media (prefers-reduced-motion: reduce) {
-  /* The swap sequence only runs when its button is pressed, and that button is
-     hidden here, so there is nothing left to suppress but the animation itself. */
-  .swap.is-playing .swap__photos .media,
-  .swap.is-playing .swap__rule::after,
-  .swap.is-playing .swap__out .media::after { animation: none; }
+  /* The sweep is a hint, not information: the handle is draggable either way,
+     and JS checks this same query before running it. */
   .swap__replay { display: none; }
   .faq .faq__a { transition: none; }
   .steps:hover .step { opacity: 1; }
@@ -1377,3 +1414,59 @@ html { color-scheme: dark; scrollbar-color: #2A2A2E var(--base); }
 .footer__legal { display: inline-flex; gap: var(--gap-element); }
 .footer__legal a { transition: color 300ms var(--ease); }
 .footer__legal a:hover { color: var(--text); }
+
+
+/* --- Format switcher --------------------------------------------------------
+   Three delivery formats used to be three paragraphs asking the reader to
+   picture the difference in shape. Picking one now makes the frame that shape,
+   which is the difference. Click-driven; nothing here reacts to scroll.
+  ------------------------------------------------------------------------- */
+.formats { display: grid; grid-template-columns: 1fr; gap: var(--gap-block); }
+.formats__picker { display: flex; flex-wrap: wrap; gap: 8px; }
+.formats__tab {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 12px 18px;
+  border: 1px solid var(--line-strong);
+  background: none;
+  color: var(--muted);
+  font-size: var(--t-sm);
+  min-height: 44px;
+  transition: color 300ms var(--ease), border-color 300ms var(--ease), background 300ms var(--ease);
+}
+.formats__tab em {
+  font-style: normal;
+  font-size: var(--t-micro);
+  letter-spacing: var(--ls-micro);
+  font-variant-numeric: tabular-nums;
+}
+.formats__tab:hover { color: var(--text); border-color: var(--text); }
+.formats__tab[aria-selected="true"] {
+  color: var(--base);
+  background: var(--text);
+  border-color: var(--text);
+}
+.formats__tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.formats__stage {
+  display: grid;
+  grid-template-columns: minmax(0, 420px) 1fr;
+  gap: var(--gap-block);
+  align-items: start;
+}
+/* The frame changes shape rather than cross-fading, because the shape IS the
+   information. Height is what moves, so it is the only thing transitioned. */
+.formats__frame {
+  aspect-ratio: var(--fmt, 16 / 9);
+  transition: aspect-ratio 420ms var(--ease);
+}
+.formats__copy h3 { margin-bottom: var(--gap-element); }
+.formats__copy p { color: var(--muted); font-size: var(--t-sm); max-width: 46ch; }
+@media (max-width: 860px) {
+  .formats__stage { grid-template-columns: 1fr; }
+  .formats__frame { max-width: 340px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .formats__frame { transition: none; }
+}

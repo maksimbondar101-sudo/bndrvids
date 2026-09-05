@@ -360,20 +360,106 @@
     });
   });
 
-  /* --- The swap sequence -----------------------------------------------------
-     Plays when asked, not when scrolled past. Restarting a CSS animation needs
-     the class off, a forced reflow read, then the class back on; without that
-     read the browser coalesces both changes into no change at all. */
-  var swap = document.querySelector('.swap');
-  if (swap) {
-    var replay = swap.querySelector('[data-swap-replay]');
-    if (replay) {
-      replay.addEventListener('click', function () {
-        swap.classList.remove('is-playing');
-        void swap.offsetWidth;              /* forces the restart; do not remove */
-        swap.classList.add('is-playing');
-      });
+  /* --- The compare slider ------------------------------------------------------
+     One value, --split, feeds both the clip-path on the top layer and the
+     position of the handle, so pointer and keyboard drive exactly the same
+     thing and there is no second code path to keep in sync. The range input is
+     the control; everything visible tracks it.
+    ------------------------------------------------------------------------- */
+  var compare = document.querySelector('[data-compare]');
+  if (compare) {
+    var range = compare.querySelector('[data-compare-range]');
+    var frame = compare.querySelector('.compare__frame');
+    var sweeping = false;
+
+    var setSplit = function (pct) {
+      frame.style.setProperty('--split', pct + '%');
+    };
+    setSplit(parseFloat(range.value));
+
+    range.addEventListener('input', function () {
+      sweeping = false;                       /* a real drag cancels the hint */
+      setSplit(parseFloat(range.value));
+    });
+
+    /* The sweep exists to show the frame is draggable at all. It runs from the
+       button, never on its own and never on scroll, and a pointer landing on
+       the frame stops it immediately: a control that keeps moving under your
+       finger is worse than one that never moved. */
+    var replay = compare.querySelector('[data-swap-replay]');
+    if (replay && !reduced) {
+      var sweep = function () {
+        var start = performance.now();
+        var from = parseFloat(range.value);
+        sweeping = true;
+        var step = function (now) {
+          if (!sweeping) return;
+          var t = Math.min(1, (now - start) / 1600);
+          /* Out to 88%, back to 14%, settle at 52%. Cosine so the turns are
+             eased rather than snapped. */
+          var v = t < 0.4 ? from + (88 - from) * (1 - Math.cos(t / 0.4 * Math.PI)) / 2
+                : t < 0.8 ? 88 + (14 - 88) * (1 - Math.cos((t - 0.4) / 0.4 * Math.PI)) / 2
+                          : 14 + (52 - 14) * (1 - Math.cos((t - 0.8) / 0.2 * Math.PI)) / 2;
+          range.value = v;
+          setSplit(v);
+          if (t < 1) window.requestAnimationFrame(step); else sweeping = false;
+        };
+        window.requestAnimationFrame(step);
+      };
+      replay.addEventListener('click', sweep);
+      frame.addEventListener('pointerdown', function () { sweeping = false; });
+    } else if (replay) {
+      replay.hidden = true;
     }
+  }
+
+  /* --- Format switcher ---------------------------------------------------------
+     Real tabs: arrow keys move between them, the panel is announced, and the
+     frame takes the aspect ratio of whichever is selected. The copy lives here
+     rather than in the markup because each panel is two lines, and three
+     hidden panels in the HTML would be three things to keep in sync.
+    ------------------------------------------------------------------------- */
+  var formats = document.querySelector('[data-formats]');
+  if (formats) {
+    var tabs = [].slice.call(formats.querySelectorAll('.formats__tab'));
+    var frame = formats.querySelector('[data-formats-frame]');
+    var panel = formats.querySelector('#fmt-panel');
+    var title = formats.querySelector('[data-formats-title]');
+    var body = formats.querySelector('[data-formats-body]');
+
+    var COPY = {
+      'fmt-master': ['The master',
+        '16:9, 1080p or 4K, for your leasing page, YouTube, and any listing portal that takes video.'],
+      'fmt-portal': ['Portal-safe exports',
+        'Sized and encoded to upload cleanly to Zillow, Apartments.com and the MLS without re-compression.'],
+      'fmt-vertical': ['Vertical cutdowns',
+        '9:16 edits for Instagram, TikTok, Facebook and paid social, where most people under 35 will actually see a property.']
+    };
+
+    var select = function (tab, focus) {
+      tabs.forEach(function (t) {
+        var on = t === tab;
+        t.setAttribute('aria-selected', String(on));
+        t.tabIndex = on ? 0 : -1;
+      });
+      frame.style.setProperty('--fmt', tab.getAttribute('data-format'));
+      panel.setAttribute('aria-labelledby', tab.id);
+      var copy = COPY[tab.id];
+      if (copy) { title.textContent = copy[0]; body.textContent = copy[1]; }
+      if (focus) tab.focus();
+    };
+
+    tabs.forEach(function (tab, i) {
+      tab.addEventListener('click', function () { select(tab); });
+      /* Arrow keys are what a tablist is expected to answer to. Without them
+         the role is a claim the markup does not honour. */
+      tab.addEventListener('keydown', function (e) {
+        var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if (!d) return;
+        e.preventDefault();
+        select(tabs[(i + d + tabs.length) % tabs.length], true);
+      });
+    });
   }
 
   /* --- Photo gauge ----------------------------------------------------------

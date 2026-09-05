@@ -170,38 +170,50 @@
         <h2>The same photos that have been sitting on a listing.</h2>
       </div>
 
-      <div class="swap">
-        <!-- Six real listing photos belong in these frames — one <img> each,
-             loading="lazy" decoding="async". Until they exist the numbered
-             labels make the strip read as a contact sheet rather than as six
-             slots that failed to load; site.js fades each label out the moment
-             its image decodes, so dropping the files in needs no other edit. -->
-        <div class="swap__photos">
-          <div class="media media--4x3" data-label="01" style="--n:0"></div>
-          <div class="media media--4x3" data-label="02" style="--n:1"></div>
-          <div class="media media--4x3" data-label="03" style="--n:2"></div>
-          <div class="media media--4x3" data-label="04" style="--n:3"></div>
-          <div class="media media--4x3" data-label="05" style="--n:4"></div>
-          <div class="media media--4x3" data-label="06" style="--n:5"></div>
-        </div>
+      <!-- The two halves of the claim, stacked in one frame rather than set
+           side by side, so a visitor drags between them instead of reading a
+           diagram. Both placeholder groups are unchanged: the six numbered
+           frames underneath, the walkthrough frame on top. Drop real files
+           into either and this needs no edit.
 
-        <div class="swap__mid">
-          <div class="swap__rule"></div>
-          <span class="micro">The same listing</span>
-        </div>
-
-        <div class="swap__out">
-          <div class="media media--16x9" data-hover>
-            <video muted loop playsinline preload="none" poster="assets/img/walkthrough-poster.jpg">
-              <!-- Drop the file in and restore this line: <source src="assets/video/walkthrough-demo.mp4" type="video/mp4"> -->
-            </video>
+           Nothing here runs on scroll. It moves when a pointer, a key, or the
+           replay button moves it. -->
+      <div class="compare" data-compare>
+        <div class="compare__frame">
+          <div class="compare__layer compare__layer--before">
+            <div class="swap__photos">
+              <div class="media media--4x3" data-label="01" style="--n:0"></div>
+              <div class="media media--4x3" data-label="02" style="--n:1"></div>
+              <div class="media media--4x3" data-label="03" style="--n:2"></div>
+              <div class="media media--4x3" data-label="04" style="--n:3"></div>
+              <div class="media media--4x3" data-label="05" style="--n:4"></div>
+              <div class="media media--4x3" data-label="06" style="--n:5"></div>
+            </div>
+            <span class="compare__tag">Your listing photos</span>
           </div>
-          <p class="micro" style="margin-top:16px">Built from listing photos · 62 seconds</p>
-          <!-- A demonstration you can ask to see again, rather than one that
-               loops at you. Hidden under reduced-motion, where the sequence
-               lands in its finished state instead of playing. -->
-          <button class="swap__replay" type="button" data-swap-replay>Play it again</button>
+
+          <div class="compare__layer compare__layer--after" data-compare-after>
+            <div class="media media--16x9">
+              <video muted loop playsinline preload="none" poster="assets/img/walkthrough-poster.jpg">
+                <!-- Drop the file in and restore this line: <source src="assets/video/walkthrough-demo.mp4" type="video/mp4"> -->
+              </video>
+            </div>
+            <span class="compare__tag compare__tag--right">The walkthrough</span>
+          </div>
+
+          <!-- A real range input, so this is keyboard-operable and announced to
+               assistive tech without any of that being bolted on afterwards.
+               The visible handle is decorative and tracks its value. -->
+          <input class="compare__range" type="range" min="0" max="100" value="52" step="0.1"
+                 data-compare-range aria-label="Compare the listing photos with the finished walkthrough">
+          <div class="compare__handle" data-compare-handle aria-hidden="true"></div>
         </div>
+
+        <p class="micro compare__note">
+          <span>Drag to compare</span>
+          <span>Built from listing photos · 62 seconds</span>
+          <button class="swap__replay" type="button" data-swap-replay>Play it again</button>
+        </p>
       </div>
     </div>
   </section>

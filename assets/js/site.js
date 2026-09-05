@@ -413,55 +413,6 @@
     }
   }
 
-  /* --- Format switcher ---------------------------------------------------------
-     Real tabs: arrow keys move between them, the panel is announced, and the
-     frame takes the aspect ratio of whichever is selected. The copy lives here
-     rather than in the markup because each panel is two lines, and three
-     hidden panels in the HTML would be three things to keep in sync.
-    ------------------------------------------------------------------------- */
-  var formats = document.querySelector('[data-formats]');
-  if (formats) {
-    var tabs = [].slice.call(formats.querySelectorAll('.formats__tab'));
-    var frame = formats.querySelector('[data-formats-frame]');
-    var panel = formats.querySelector('#fmt-panel');
-    var title = formats.querySelector('[data-formats-title]');
-    var body = formats.querySelector('[data-formats-body]');
-
-    var COPY = {
-      'fmt-master': ['The master',
-        '16:9, 1080p or 4K, for your leasing page, YouTube, and any listing portal that takes video.'],
-      'fmt-portal': ['Portal-safe exports',
-        'Sized and encoded to upload cleanly to Zillow, Apartments.com and the MLS without re-compression.'],
-      'fmt-vertical': ['Vertical cutdowns',
-        '9:16 edits for Instagram, TikTok, Facebook and paid social, where most people under 35 will actually see a property.']
-    };
-
-    var select = function (tab, focus) {
-      tabs.forEach(function (t) {
-        var on = t === tab;
-        t.setAttribute('aria-selected', String(on));
-        t.tabIndex = on ? 0 : -1;
-      });
-      frame.style.setProperty('--fmt', tab.getAttribute('data-format'));
-      panel.setAttribute('aria-labelledby', tab.id);
-      var copy = COPY[tab.id];
-      if (copy) { title.textContent = copy[0]; body.textContent = copy[1]; }
-      if (focus) tab.focus();
-    };
-
-    tabs.forEach(function (tab, i) {
-      tab.addEventListener('click', function () { select(tab); });
-      /* Arrow keys are what a tablist is expected to answer to. Without them
-         the role is a claim the markup does not honour. */
-      tab.addEventListener('keydown', function (e) {
-        var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
-        if (!d) return;
-        e.preventDefault();
-        select(tabs[(i + d + tabs.length) % tabs.length], true);
-      });
-    });
-  }
-
   /* --- Photo gauge ----------------------------------------------------------
      Bands and copy are the requirements table on /how-it-works, unchanged —
      this control restates the site's existing policy, it does not set new

@@ -4,7 +4,7 @@ Static marketing site for BNDRVIDS. Seven pages, no build step, no framework,
 no dependencies. Every file in this repo is either served as-is or is a note to
 whoever maintains it.
 
-Live at **https://bndrvids.com** via Netlify.
+Live at **https://bndrvids.com**. Migrating from Netlify to Vercel: see below.
 
 ---
 
@@ -21,13 +21,48 @@ for you in production. Every nav link on the site uses that form, so use
 
 ## Deploying
 
-The repo is connected to the Netlify project `bndrvids`. **Pushing to `main`
-deploys the site.** Nothing else is required — there is no build command and
-the publish directory is the repo root.
+**Pushing to `main` deploys the site.** There is no build command and the
+output directory is the repo root, on either host.
 
-To deploy without a commit, use *Deploys → Trigger deploy* in the Netlify UI.
-To deploy without Git at all, drag a zip of this directory onto the same page;
-`_headers` and `_redirects` (see below) make that path behave identically.
+### Migrating to Vercel
+
+The repo carries configuration for both hosts while the cutover settles.
+
+| File | Read by | Status |
+|---|---|---|
+| `vercel.json` | Vercel | The live configuration once DNS moves |
+| `.vercelignore` | Vercel | Keeps maintainer files out of the deployment |
+| `netlify.toml` | Netlify | Rollback path. Not uploaded to Vercel |
+| `_headers`, `_redirects` | Netlify manual deploys | Rollback path. Not uploaded to Vercel |
+
+`vercel.json` carries the identical Content-Security-Policy, the same four
+security headers and the same immutable font caching. Verified byte-for-byte
+against `netlify.toml` rather than retyped.
+
+Two things differ, both improvements:
+
+- **`cleanUrls: true`** replaces the extensionless-URL behaviour Netlify did
+  implicitly. Every nav link on this site depends on it, so it is now stated
+  rather than assumed.
+- **`.vercelignore` replaces three forced 404 redirects.** Netlify had to serve
+  `README.md` and then 404 it. Vercel simply never uploads it, so there is no
+  file to reach. If you add another maintainer-facing file, add it there in the
+  same commit.
+
+**Order matters on the cutover.** Deploy to Vercel and verify on its
+`.vercel.app` URL *before* moving DNS. Both hosts serve the same commit, so
+while records propagate some visitors hit Netlify and some hit Vercel and
+neither can tell. Moving DNS first creates a window where the domain points at
+nothing.
+
+**DNS records come from Vercel's own dashboard**, shown when you add the
+domain. Use those rather than any value written down here, which can go stale.
+
+### Once Vercel is confirmed live
+
+Delete `netlify.toml`, `_headers`, `_redirects`, and the block naming them in
+`.vercelignore`. Leaving dead configuration in the repo misleads whoever reads
+it next.
 
 ---
 

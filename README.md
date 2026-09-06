@@ -167,7 +167,9 @@ Held deliberately, and checked rather than assumed:
 There is still exactly **one scroll listener**, rAF-throttled, and two things
 ride it. It switches the fixed header from transparent to a solid backdrop past
 24px, without which the nav links sit unreadable over whatever scrolls beneath
-them. And it drives the 2px progress line across the top edge.
+them. And it drives the 2px progress line sitting on the header's bottom edge,
+whose track is the same `--line` colour as that border, so the two read as one
+rule with amber filling along it.
 
 Both are readouts rather than effects: they report a scroll the reader
 performed, they do not perform one. Nothing on this site starts moving because

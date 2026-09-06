@@ -127,6 +127,7 @@ ul, ol { list-style: none; }
      read back as a customer, the page kept losing its train of thought. 96
      still doubles the 48 block gap, so the hierarchy the rule protects is
      intact; the page is just no longer mostly air. */
+  --nav-h: 72px;
   --gap-section: 96px;
   --gap-block:    48px;
   --gap-element:  16px;
@@ -346,9 +347,13 @@ html { color-scheme: dark; scrollbar-color: #2A2A2E var(--base); }
 }
 
 /* --- Scroll progress ------------------------------------------------------
-   One 2px line across the top edge, filling as the page moves under you. It
-   is a position readout rather than an effect: nothing about it animates on
-   its own, it only ever reports a scroll the reader performed.
+   One 2px line sitting on the header's bottom edge, filling as the page moves
+   under you. It is a position readout rather than an effect: nothing about it
+   animates on its own, it only ever reports a scroll the reader performed.
+
+   Its track is var(--line), which is the same colour .nav.is-scrolled gives
+   its bottom border — so the header's rule and the empty part of the track
+   read as one continuous line, and the amber fills along it.
 
    scaleX, not width, so tracking the scroll costs a composite rather than a
    layout on every frame. No transition on the bar itself either: a transition
@@ -356,7 +361,8 @@ html { color-scheme: dark; scrollbar-color: #2A2A2E var(--base); }
   ------------------------------------------------------------------------- */
 .progress {
   position: fixed;
-  inset: 0 0 auto 0;
+  top: var(--nav-h);
+  left: 0; right: 0;
   height: 2px;
   z-index: 150;
   background: var(--line);
@@ -367,6 +373,11 @@ html { color-scheme: dark; scrollbar-color: #2A2A2E var(--base); }
 /* Only shown once there is something to report. A bar sitting permanently
    full on a short page is noise pretending to be information. */
 .progress.is-live { opacity: 1; }
+/* The mobile menu panel opens at exactly this offset and locks body scroll
+   while it is up, so the line would sit frozen across the top of the menu,
+   reporting a scroll nobody can perform. Requires .progress to follow .nav in
+   source order, which is why the markup sits below </header>. */
+.nav.is-open ~ .progress { opacity: 0; }
 .progress__bar {
   height: 100%;
   background: var(--accent);
@@ -381,7 +392,7 @@ html { color-scheme: dark; scrollbar-color: #2A2A2E var(--base); }
 .nav {
   position: fixed;
   inset: 0 0 auto 0;
-  height: 72px;
+  height: var(--nav-h);
   z-index: 100;
   display: flex;
   align-items: center;
@@ -445,9 +456,9 @@ html { color-scheme: dark; scrollbar-color: #2A2A2E var(--base); }
        its position:fixed descendants — so `bottom: 0` resolved against the 72px
        header and collapsed this panel to 53px. Sizing it in viewport units
        keeps it independent of that. */
-    top: 72px; left: 0; right: 0;
-    height: calc(100vh - 72px);
-    height: calc(100svh - 72px);
+    top: var(--nav-h); left: 0; right: 0;
+    height: calc(100vh - var(--nav-h));
+    height: calc(100svh - var(--nav-h));
     flex-direction: column;
     align-items: stretch;
     gap: 0;

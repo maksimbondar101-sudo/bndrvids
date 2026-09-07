@@ -55,6 +55,45 @@ certificate challenge. That has taken this site down once already.
 If you ever repoint it, take the record values from Vercel's own Domains panel
 rather than from anything written down here, which can go stale.
 
+### Email, and the one record that is missing
+
+Mail for `bndrvids.com` runs on Google Workspace (`MX 1 smtp.google.com`), and
+DKIM is published at `google._domainkey`. DMARC is at **`p=reject; sp=reject;
+adkim=s; aspf=s`**, which is full enforcement with strict alignment on both
+legs.
+
+**There is no SPF record on the domain.** With `p=reject`, that means every
+message from `bndrvids.com` is riding on DKIM alone: if the DKIM signature ever
+breaks, or a sender that is not Google sends on your behalf, the mail is
+*rejected* rather than filtered, and you never see it bounce. The fix is one
+TXT record on `@`:
+
+```
+v=spf1 include:_spf.google.com ~all
+```
+
+Add any other service that sends as this domain to that record, or make sure it
+DKIM-signs with `d=bndrvids.com`. The DMARC `rua=` already points at
+Cloudflare's DMARC reporting, so the reports that would show this are being
+collected.
+
+### BIMI
+
+`assets/img/bimi-logo.svg` is a compliant SVG Tiny P/S file: square viewBox,
+`baseProfile="tiny-ps"`, `<title>` first, solid background, no scripts or
+external references, 741 bytes. The artwork is the favicon scaled to 78% about
+the centre, because Gmail crops BIMI logos to a circle and the amber rule sat
+outside it at full size.
+
+**No BIMI record is published**, because Gmail will not display a logo without
+a VMC or CMC certificate, and neither has been bought. The DMARC prerequisite
+is already satisfied, so the only thing standing between this file and a logo
+in the inbox is that certificate. When there is one:
+
+```
+default._bimi   TXT   v=BIMI1; l=https://bndrvids.com/assets/img/bimi-logo.svg; a=https://bndrvids.com/assets/img/bimi-vmc.pem
+```
+
 ---
 
 ## Booking

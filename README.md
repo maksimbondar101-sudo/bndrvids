@@ -77,6 +77,31 @@ DKIM-signs with `d=bndrvids.com`. The DMARC `rua=` already points at
 Cloudflare's DMARC reporting, so the reports that would show this are being
 collected.
 
+### The sitemap generates itself
+
+```bash
+python3 tools/sitemap.py     # run after editing pages, before committing
+```
+
+`sitemap.xml` used to be maintained by hand and it drifted: five `lastmod`
+dates were a week stale before anyone noticed, and a page added without a
+matching entry would have been invisible. It is now derived from the pages
+themselves.
+
+A page is listed if it is a `.html` file in the repo root, is not `404.html`,
+and does not carry `<meta name="robots" content="noindex">`. That is the whole
+rule, so **`/start` excludes itself** by being noindex rather than by being
+remembered. `lastmod` comes from git, or from today if the file has
+uncommitted edits.
+
+The script **refuses to write** a sitemap that disagrees with the pages. An
+indexable page with no canonical, or a canonical pointing somewhere other than
+its own route, is an error and not a warning: a sitemap entry the page itself
+disowns is worse than no entry. Test it by breaking a canonical on purpose.
+
+`<priority>` and `<changefreq>` are gone. Google ignores both, so they were
+claiming a signal nothing reads.
+
 ### BIMI
 
 `assets/img/bimi-logo.svg` is a compliant SVG Tiny P/S file: square viewBox,

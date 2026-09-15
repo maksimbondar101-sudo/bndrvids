@@ -72,7 +72,31 @@ accurate and readable, which is not the same as legally sufficient. Clause 6 on
 photograph rights puts the licensing risk on the customer. That is a commercial
 position, not a neutral fact.
 
-**5. Placeholder images do double duty.** `hero-poster.jpg` and `walkthrough-poster.jpg`
+**5. The Netlify project was never actually deleted.** `ac45bd8` removed `netlify.toml`,
+`_headers` and `_redirects` from the repo, and this document previously said Netlify was
+"deleted entirely". It was not. The project still exists, is still linked to this
+repository, and still builds every push — it posted a deploy preview on PR #3. Verified
+2026-09-15 via the Netlify API: project `6b96402b-9350-410f-9edd-e9f739442dcd`, claimed,
+current deploy `ready`, and **`primarySiteUrl` still reads `https://bndrvids.com`**.
+
+Three consequences, none of them currently breaking the live site:
+
+- Netlify builds with no `netlify.toml`, so its copy ships **no CSP and no `cleanUrls`**.
+  Every internal link on this site is extensionless, so on the Netlify copy everything
+  except `/` 404s — the same failure documented in section 5 under "Vercel's first
+  deploy served an old commit".
+- Netlify still holds `bndrvids.com` as a custom domain. DNS points at Vercel, so this is
+  a stale claim rather than a conflict, but it is a second party that believes it owns
+  the apex.
+- `privacy.html` names Vercel, Cal.com and Google as the subprocessors that see request
+  logs. Anything served from the Netlify copy is logged by a fourth.
+
+Deploy previews are gated (`requiresSSOTeamLogin` for non-production), so this is not
+public exposure. **Do not delete the project or touch its domain settings without
+checking what else is attached to that Netlify team first** — section 5 records what
+happened the last time DNS was edited to fix something that turned out not to be broken.
+
+**6. Placeholder images do double duty.** `hero-poster.jpg` and `walkthrough-poster.jpg`
 are byte-identical, as are `brand-motion.jpg` and `process-poster.jpg`. Two abstract
 graphics cover four slots and none of them shows a property.
 
@@ -152,7 +176,7 @@ This session, oldest first. All on `main` and the feature branch.
 | `978f5b7` | Compare slider (homepage) and format switcher (`/how-it-works`) |
 | `5847233` | `vercel.json` + `.vercelignore` added alongside the Netlify config for the cutover |
 | `a7f41cf` | Removed the "What comes back" section and the format switcher with it |
-| `ac45bd8` | Netlify deleted entirely; scroll progress line added |
+| `ac45bd8` | Netlify config removed from the repo; scroll progress line added |
 | `ffeabf8` | Progress line moved onto the header's bottom edge; `--nav-h` introduced |
 | `2365786` | BIMI-ready SVG logo; missing SPF record documented |
 | `a7c663e` | `tools/sitemap.py`; sitemap generated rather than hand-maintained |
@@ -161,6 +185,7 @@ This session, oldest first. All on `main` and the feature branch.
 
 | Commit | What |
 |---|---|
+| (this branch) | Corrected the Netlify claim in section 2 — the project was never deleted and still builds every push. Documented state, no code or infrastructure changed. |
 | (this branch) | Corrected three stale source comments. Two named the required cal.com booking question `listing`; the real slug is `Property-Listing` and `listing` is the exact bug documented in section 5. The third described `site.js` as having "four jobs" and as carrying the listing link "through to the request form", which was removed. Comments only — no visitor-facing text and no behaviour changed. |
 
 Earlier in the same engagement, before this window: the FormSubmit request form and its

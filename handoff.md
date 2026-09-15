@@ -157,6 +157,12 @@ This session, oldest first. All on `main` and the feature branch.
 | `2365786` | BIMI-ready SVG logo; missing SPF record documented |
 | `a7c663e` | `tools/sitemap.py`; sitemap generated rather than hand-maintained |
 
+### Continuation, 2026-09-15
+
+| Commit | What |
+|---|---|
+| (this branch) | Corrected three stale source comments. Two named the required cal.com booking question `listing`; the real slug is `Property-Listing` and `listing` is the exact bug documented in section 5. The third described `site.js` as having "four jobs" and as carrying the listing link "through to the request form", which was removed. Comments only — no visitor-facing text and no behaviour changed. |
+
 Earlier in the same engagement, before this window: the FormSubmit request form and its
 `/thanks` page were removed entirely and replaced by the cal.com booker (about 170 lines
 of JS and 160 of CSS deleted), call length was set to 30 minutes throughout, and

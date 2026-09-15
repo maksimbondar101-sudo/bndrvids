@@ -1,7 +1,8 @@
 /* ============================================================================
    BNDRVIDS — site behaviour
-   Four jobs, nothing else: nav state, one reveal gesture, media load state,
-   and carrying a pasted listing link through to the request form.
+   Nav state and the scroll progress line, media load state, the cal.com
+   booker, the FAQ, the compare slider, the photo gauge, the footer year.
+   No framework and no dependencies; every section below stands on its own.
    ========================================================================== */
 (function () {
   'use strict';
@@ -234,8 +235,9 @@
 
      Two settings on the cal.com event type carry weight nothing here can
      enforce: MINIMUM NOTICE, which must cover the time it takes to build a
-     walkthrough before the call, and a required booking question named
-     `listing`, which is where the carried URL below lands. See README. */
+     walkthrough before the call, and a required booking question whose slug
+     is `Property-Listing`, which is where the carried URL below lands. That
+     slug has to match exactly — see the note on the prefill below. */
   var CAL_LINK = 'bndrvids/30min';
 
   var booking = document.querySelector('[data-cal-embed]');

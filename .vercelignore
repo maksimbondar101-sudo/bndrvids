@@ -5,6 +5,7 @@
 # maintainer-facing file to the repo, add it here in the same commit.
 
 README.md
+handoff.md
 serve.ps1
 assets/fonts/README.txt
 tools/

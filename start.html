@@ -77,8 +77,10 @@
 
            ⚠ Two settings on the cal.com event type carry weight this markup
            cannot enforce: MINIMUM NOTICE (48h — the walkthrough is built
-           before the call) and a required booking question named `listing`,
-           which is where the carried listing URL below lands. See README.
+           before the call) and a required booking question whose slug is
+           `Property-Listing`, which is where the carried listing URL below
+           lands. A prefill key matching no field is discarded silently, so
+           that slug has to match character for character. See README.
       ───────────────────────────────────────────────────────────────────── -->
       <div class="booking">
         <div id="cal-booking" class="cal-embed" data-cal-embed></div>

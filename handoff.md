@@ -312,6 +312,18 @@ unanimous on the top item.
 
 ### Do first
 
+**0. Upgrade the Runway plan. Nothing below it can start until this is done.** Checked
+2026-09-15 via the Runway API: the connected workspace ("Maksim", personal) is on the
+**Free** plan, `availableVideoModels` is empty, and video generation, video editing,
+multishot and upscaling all come back as gated. 500 credits, 0 purchased, and none of
+them can be spent on video. Standard ($15/mo) unlocks video with no watermark; Pro
+($35/mo) also includes Runway MCP, which a Claude session needs in order to generate
+clips itself and commit them. Item 1 has been blocked on this the whole time.
+
+Also still open, all owner decisions: the governing-law state for Terms clause 12, the
+exact Instagram URL for `sameAs`, whether to add a Stripe payment link, and whether to
+delete the stale Netlify project (see section 2, item 5).
+
 **1. Put three finished videos on the homepage.** The scaffolding is already in the
 markup: drop the files into `assets/video/` and restore the commented `<source>` line
 above each one. Self-hosted MP4s need **zero CSP changes**.
